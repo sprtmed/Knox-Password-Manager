@@ -1,0 +1,87 @@
+import Foundation
+import SwiftUI
+import Combine
+
+final class SettingsViewModel: ObservableObject {
+    @Published var theme: String = "dark" {
+        didSet { NotificationCenter.default.post(name: .menuBarIconChanged, object: nil) }
+    }
+    @Published var menuBarIcon: String = "lock-shield" {
+        didSet { NotificationCenter.default.post(name: .menuBarIconChanged, object: nil) }
+    }
+    @Published var menuBarShowLabel: Bool = true {
+        didSet { NotificationCenter.default.post(name: .menuBarIconChanged, object: nil) }
+    }
+    @Published var menuBarLabel: String = "Vault" {
+        didSet { NotificationCenter.default.post(name: .menuBarIconChanged, object: nil) }
+    }
+    @Published var autoLockEnabled: Bool = true
+    @Published var autoLockMinutes: Double = 5
+    @Published var clipboardClearEnabled: Bool = true
+    @Published var clipboardClearSeconds: Double = 30
+    @Published var biometricEnabled: Bool = false
+    @Published var defaultFavoritesFilter: Bool = false
+    @Published var confirmBeforeDelete: Bool = true
+
+    // Import/Export feedback
+    @Published var showImportSuccess: Bool = false
+    @Published var showExportSuccess: Bool = false
+
+    var isDarkMode: Bool {
+        theme == "dark"
+    }
+
+    func toggleTheme() {
+        theme = isDarkMode ? "light" : "dark"
+    }
+
+    func selectMenuBarIcon(_ option: MenuBarIconOption) {
+        menuBarIcon = option.id
+        menuBarShowLabel = option.showLabel
+        menuBarLabel = option.label
+    }
+
+    func loadFromVaultSettings(_ settings: VaultSettings) {
+        theme = settings.theme
+        menuBarIcon = settings.menuBarIcon
+        menuBarShowLabel = settings.menuBarShowLabel
+        menuBarLabel = settings.menuBarLabel
+        autoLockEnabled = settings.autoLockEnabled
+        autoLockMinutes = Double(settings.autoLockMinutes)
+        clipboardClearEnabled = settings.clipboardClearEnabled
+        clipboardClearSeconds = Double(settings.clipboardClearSeconds)
+        biometricEnabled = settings.biometricEnabled
+        defaultFavoritesFilter = settings.defaultFavoritesFilter
+        confirmBeforeDelete = settings.confirmBeforeDelete
+    }
+
+    func resetToDefaults() {
+        theme = "dark"
+        menuBarIcon = "lock-shield"
+        menuBarShowLabel = true
+        menuBarLabel = "Vault"
+        autoLockEnabled = true
+        autoLockMinutes = 5
+        clipboardClearEnabled = true
+        clipboardClearSeconds = 30
+        biometricEnabled = false
+        defaultFavoritesFilter = false
+        confirmBeforeDelete = true
+    }
+
+    func toVaultSettings() -> VaultSettings {
+        VaultSettings(
+            menuBarIcon: menuBarIcon,
+            menuBarShowLabel: menuBarShowLabel,
+            menuBarLabel: menuBarLabel,
+            autoLockEnabled: autoLockEnabled,
+            autoLockMinutes: Int(autoLockMinutes),
+            clipboardClearEnabled: clipboardClearEnabled,
+            clipboardClearSeconds: Int(clipboardClearSeconds),
+            theme: theme,
+            biometricEnabled: biometricEnabled,
+            defaultFavoritesFilter: defaultFavoritesFilter,
+            confirmBeforeDelete: confirmBeforeDelete
+        )
+    }
+}
