@@ -17,6 +17,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Auto-lock service
     private let autoLockService = AutoLockService()
 
+    // Update check service
+    let updateCheckService = UpdateCheckService()
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         AntiDebugService.denyDebuggerAttachment()
 
@@ -28,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupEventMonitor()
         registerGlobalHotKey()
         observeStateChanges()
+        updateCheckService.checkForUpdate()
     }
 
     // MARK: - Observe ViewModel Changes
@@ -145,6 +149,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let contentView = ContentView()
             .environmentObject(vaultViewModel)
             .environmentObject(settingsViewModel)
+            .environmentObject(updateCheckService)
 
         let hostingController = NSHostingController(rootView: contentView)
 

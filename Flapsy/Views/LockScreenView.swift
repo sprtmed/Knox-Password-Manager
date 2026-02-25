@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LockScreenView: View {
     @EnvironmentObject var vault: VaultViewModel
+    @EnvironmentObject var updateCheck: UpdateCheckService
     @Environment(\.theme) var theme
 
     @FocusState private var isPasswordFocused: Bool
@@ -208,6 +209,24 @@ struct LockScreenView: View {
                     Label("Argon2id", systemImage: "diamond.fill")
                         .font(.system(size: 10, design: .monospaced))
                         .foregroundColor(theme.textGhost)
+                }
+
+                // Update available
+                if updateCheck.updateAvailable, let version = updateCheck.latestVersion {
+                    Button(action: {
+                        if let url = URL(string: "https://github.com/sprtmed/knox/releases/latest") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.down.circle")
+                                .font(.system(size: 9))
+                            Text("v\(version) available")
+                                .font(.system(size: 10, design: .monospaced))
+                        }
+                        .foregroundColor(theme.accentBlueLt)
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 Spacer()

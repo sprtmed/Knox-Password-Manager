@@ -59,5 +59,6 @@ targets:
       path: Flapsy/Flapsy.entitlements
       properties:
         com.apple.security.app-sandbox: false
+        com.apple.security.network.client: true
         keychain-access-groups:
           - "$(AppIdentifierPrefix)com.knox.app"

@@ -3,6 +3,7 @@ import SwiftUI
 struct VaultListView: View {
     @EnvironmentObject var vault: VaultViewModel
     @EnvironmentObject var settings: SettingsViewModel
+    @EnvironmentObject var updateCheck: UpdateCheckService
     @Environment(\.theme) var theme
 
     @FocusState private var isSearchFieldFocused: Bool
@@ -170,14 +171,32 @@ struct VaultListView: View {
     // MARK: - Footer
 
     private var footer: some View {
-        HStack {
-            Text("\(vault.items.count) items \u{00B7} AES-256")
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundColor(theme.textGhost)
-            Spacer()
-            Text("Auto-lock: \(settings.autoLockEnabled ? "\(Int(settings.autoLockMinutes))m" : "Off")")
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundColor(theme.textGhost)
+        VStack(spacing: 4) {
+            HStack {
+                Text("\(vault.items.count) items \u{00B7} AES-256")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundColor(theme.textGhost)
+                Spacer()
+                Text("Auto-lock: \(settings.autoLockEnabled ? "\(Int(settings.autoLockMinutes))m" : "Off")")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundColor(theme.textGhost)
+            }
+            if updateCheck.updateAvailable, let version = updateCheck.latestVersion {
+                Button(action: {
+                    if let url = URL(string: "https://github.com/sprtmed/knox/releases/latest") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.down.circle")
+                            .font(.system(size: 9))
+                        Text("v\(version) available — download update")
+                            .font(.system(size: 10, design: .monospaced))
+                    }
+                    .foregroundColor(theme.accentBlueLt)
+                }
+                .buttonStyle(.plain)
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
