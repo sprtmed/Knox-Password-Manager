@@ -1,5 +1,9 @@
 import Foundation
 
+// ptrace is not exposed to Swift; declare it via symbol name.
+@_silgen_name("ptrace")
+private func c_ptrace(_ request: CInt, _ pid: pid_t, _ addr: UnsafeMutableRawPointer?, _ data: CInt) -> CInt
+
 /// Prevents debugger attachment in release builds.
 /// Disabled in DEBUG to allow normal Xcode development.
 enum AntiDebugService {
@@ -9,7 +13,7 @@ enum AntiDebugService {
         #if !DEBUG
         // PT_DENY_ATTACH prevents future debugger attachment via ptrace.
         let PT_DENY_ATTACH: CInt = 31
-        ptrace(PT_DENY_ATTACH, 0, nil, 0)
+        _ = c_ptrace(PT_DENY_ATTACH, 0, nil, 0)
         #endif
     }
 
