@@ -9,6 +9,7 @@ struct SettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 themeToggle
+                keepWindowOpenSection
                 menuBarIconPicker
                 autoLockSection
                 touchIDSection
@@ -47,6 +48,30 @@ struct SettingsView: View {
                 ),
                 accentColor: Color(hex: "f59e0b")
             )
+        }
+    }
+
+    // MARK: - Keep Window Open
+
+    private var keepWindowOpenSection: some View {
+        VStack(spacing: 4) {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "pin.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(theme.accentYellow)
+                    Text("Keep Window Open")
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(theme.text)
+                }
+                Spacer()
+                FlapsyToggle(isOn: $settings.keepWindowOpen)
+            }
+            .padding(.vertical, 4)
+            Text("Window stays visible when you click outside. Toggle per session with the pin button.")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundColor(theme.textFaint)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

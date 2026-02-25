@@ -24,6 +24,7 @@ xcuserdata/
 # Claude Code / internal notes
 .claude/
 CLAUDE-CODE-BUILD-INSTRUCTIONS.md
+NOTES.md
 
 # Old Xcode project (replaced by xcodegen)
 Flapsy.xcodeproj/

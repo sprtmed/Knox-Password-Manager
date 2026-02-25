@@ -117,6 +117,22 @@ struct VaultContainerView: View {
                         }
                         .buttonStyle(.plain)
                     } else {
+                        Button(action: {
+                            withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
+                                settings.isWindowPinned.toggle()
+                            }
+                        }) {
+                            Image(systemName: settings.isWindowPinned ? "pin.fill" : "pin.slash")
+                                .font(.system(size: 11))
+                                .foregroundColor(settings.isWindowPinned ? theme.accentYellow : theme.textSecondary)
+                                .padding(.horizontal, compact ? 8 : 12)
+                                .padding(.vertical, 5)
+                                .background(settings.isWindowPinned ? theme.accentYellow.opacity(0.1) : theme.fieldBg)
+                                .cornerRadius(6)
+                        }
+                        .buttonStyle(.plain)
+                        .help(settings.isWindowPinned ? "Unpin window" : "Pin window")
+
                         Button(action: { vault.navigateToPanel(.addNew) }) {
                             HStack(spacing: 4) {
                                 Text("+")

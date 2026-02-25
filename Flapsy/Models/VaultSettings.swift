@@ -27,6 +27,7 @@ struct VaultSettings: Codable {
     var defaultFavoritesFilter: Bool
     var confirmBeforeDelete: Bool
     var checkForUpdates: Bool
+    var keepWindowOpen: Bool
 
     static var defaults: VaultSettings {
         VaultSettings(
@@ -41,7 +42,8 @@ struct VaultSettings: Codable {
             biometricEnabled: false,
             defaultFavoritesFilter: false,
             confirmBeforeDelete: true,
-            checkForUpdates: true
+            checkForUpdates: true,
+            keepWindowOpen: false
         )
     }
 
@@ -60,6 +62,7 @@ struct VaultSettings: Codable {
         defaultFavoritesFilter = try container.decodeIfPresent(Bool.self, forKey: .defaultFavoritesFilter) ?? false
         confirmBeforeDelete = try container.decodeIfPresent(Bool.self, forKey: .confirmBeforeDelete) ?? true
         checkForUpdates = try container.decodeIfPresent(Bool.self, forKey: .checkForUpdates) ?? true
+        keepWindowOpen = try container.decodeIfPresent(Bool.self, forKey: .keepWindowOpen) ?? false
     }
 
     init(menuBarIcon: String, menuBarShowLabel: Bool, menuBarLabel: String,
@@ -68,7 +71,8 @@ struct VaultSettings: Codable {
          theme: String, biometricEnabled: Bool = false,
          defaultFavoritesFilter: Bool = false,
          confirmBeforeDelete: Bool = true,
-         checkForUpdates: Bool = true) {
+         checkForUpdates: Bool = true,
+         keepWindowOpen: Bool = false) {
         self.menuBarIcon = menuBarIcon
         self.menuBarShowLabel = menuBarShowLabel
         self.menuBarLabel = menuBarLabel
@@ -81,5 +85,6 @@ struct VaultSettings: Codable {
         self.defaultFavoritesFilter = defaultFavoritesFilter
         self.confirmBeforeDelete = confirmBeforeDelete
         self.checkForUpdates = checkForUpdates
+        self.keepWindowOpen = keepWindowOpen
     }
 }

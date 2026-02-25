@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var window: NSWindow!
     private var eventMonitor: Any?
+    private var localKeyMonitor: Any?
     private var hotKeyRef: EventHotKeyRef?
     private var cancellables = Set<AnyCancellable>()
 
@@ -29,6 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusItem()
         setupWindow()
         setupEventMonitor()
+        setupLocalKeyMonitor()
         registerGlobalHotKey()
         observeStateChanges()
         updateCheckService.checkForUpdate()
@@ -85,7 +87,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             settingsViewModel.$autoLockEnabled.map { _ in () }.eraseToAnyPublisher(),
             settingsViewModel.$clipboardClearEnabled.map { _ in () }.eraseToAnyPublisher(),
             settingsViewModel.$biometricEnabled.map { _ in () }.eraseToAnyPublisher(),
-            settingsViewModel.$checkForUpdates.map { _ in () }.eraseToAnyPublisher()
+            settingsViewModel.$checkForUpdates.map { _ in () }.eraseToAnyPublisher(),
+            settingsViewModel.$keepWindowOpen.map { _ in () }.eraseToAnyPublisher()
         )
         .dropFirst()
         .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
@@ -177,6 +180,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if window.isVisible {
             window.orderOut(nil)
         } else {
+            // Reset runtime pin state to the persisted default each time window opens
+            settingsViewModel.isWindowPinned = settingsViewModel.keepWindowOpen
             positionWindowBelowStatusItem()
             window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
@@ -210,6 +215,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ) { [weak self] event in
             guard let self = self, self.window.isVisible else { return }
 
+            // If pinned, don't dismiss on click-outside
+            if self.settingsViewModel.isWindowPinned { return }
+
             // Don't dismiss if clicking the status bar button (toggle handles that)
             if let button = self.statusItem.button,
                let buttonWindow = button.window {
@@ -218,6 +226,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             self.window.orderOut(nil)
+        }
+    }
+
+    private func setupLocalKeyMonitor() {
+        localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self else { return event }
+            // Esc key dismisses the window (even when pinned)
+            if event.keyCode == 53 && self.window.isVisible {
+                self.window.orderOut(nil)
+                return nil
+            }
+            return event
         }
     }
 
@@ -257,6 +277,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Clean up monitors
         autoLockService.stop()
         if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
+        if let monitor = localKeyMonitor {
             NSEvent.removeMonitor(monitor)
         }
         if let hotKey = hotKeyRef {

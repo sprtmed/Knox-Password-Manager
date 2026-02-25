@@ -25,6 +25,10 @@ final class SettingsViewModel: ObservableObject {
     @Published var checkForUpdates: Bool = true {
         didSet { UpdateCheckService.isEnabled = checkForUpdates }
     }
+    @Published var keepWindowOpen: Bool = false
+
+    // Runtime-only: current pin state for this session (not persisted)
+    @Published var isWindowPinned: Bool = false
 
     // Import/Export feedback
     @Published var showImportSuccess: Bool = false
@@ -57,6 +61,8 @@ final class SettingsViewModel: ObservableObject {
         defaultFavoritesFilter = settings.defaultFavoritesFilter
         confirmBeforeDelete = settings.confirmBeforeDelete
         checkForUpdates = settings.checkForUpdates
+        keepWindowOpen = settings.keepWindowOpen
+        isWindowPinned = settings.keepWindowOpen
     }
 
     func resetToDefaults() {
@@ -72,6 +78,8 @@ final class SettingsViewModel: ObservableObject {
         defaultFavoritesFilter = false
         confirmBeforeDelete = true
         checkForUpdates = true
+        keepWindowOpen = false
+        isWindowPinned = false
     }
 
     func toVaultSettings() -> VaultSettings {
@@ -87,7 +95,8 @@ final class SettingsViewModel: ObservableObject {
             biometricEnabled: biometricEnabled,
             defaultFavoritesFilter: defaultFavoritesFilter,
             confirmBeforeDelete: confirmBeforeDelete,
-            checkForUpdates: checkForUpdates
+            checkForUpdates: checkForUpdates,
+            keepWindowOpen: keepWindowOpen
         )
     }
 }
