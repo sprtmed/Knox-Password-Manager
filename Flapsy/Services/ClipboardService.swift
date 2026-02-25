@@ -1,0 +1,52 @@
+import AppKit
+import Foundation
+
+final class ClipboardService {
+    static let shared = ClipboardService()
+    private var clearTimer: Timer?
+    private var lastChangeCount: Int = 0
+
+    /// Pasteboard type that signals to clipboard managers (1Password, KeePassXC,
+    /// Paste, Alfred, etc.) that the content is sensitive and should not be recorded.
+    private static let concealedType = NSPasteboard.PasteboardType(
+        "org.nspasteboard.ConcealedType"
+    )
+
+    private init() {}
+
+    /// Copies a string to the clipboard and optionally schedules auto-clear.
+    /// Marks the content as "concealed" so well-behaved clipboard managers
+    /// will not persist it in their history.
+    func copy(_ string: String, clearAfter seconds: Int? = nil) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(string, forType: .string)
+        // Mark as concealed — the value is irrelevant, only the type's presence matters
+        pasteboard.setString("", forType: Self.concealedType)
+        lastChangeCount = pasteboard.changeCount
+
+        if let seconds = seconds, seconds > 0 {
+            scheduleClear(after: seconds)
+        }
+    }
+
+    /// Schedules the clipboard to be cleared after `seconds`.
+    /// Only clears if the clipboard still holds the content we placed (avoids
+    /// accidentally erasing something the user copied from another app).
+    func scheduleClear(after seconds: Int) {
+        clearTimer?.invalidate()
+        let expectedCount = lastChangeCount
+        clearTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(seconds), repeats: false) { _ in
+            let pasteboard = NSPasteboard.general
+            if pasteboard.changeCount == expectedCount {
+                pasteboard.clearContents()
+            }
+        }
+    }
+
+    /// Cancels a pending clipboard clear.
+    func cancelClear() {
+        clearTimer?.invalidate()
+        clearTimer = nil
+    }
+}

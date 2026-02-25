@@ -1,0 +1,35 @@
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+DerivedData/
+build/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Claude Code / internal notes
+.claude/
+CLAUDE-CODE-BUILD-INSTRUCTIONS.md
+
+# Old Xcode project (replaced by xcodegen)
+Flapsy.xcodeproj/
+
+# Build artifacts
+*.o
+*.d
+*.swp
+*~
