@@ -376,13 +376,39 @@ struct ItemDetailView: View {
     @ViewBuilder
     private func loginDetail(_ item: VaultItem) -> some View {
         if let url = item.url, !url.isEmpty {
-            DetailFieldRow(
-                label: "URL",
-                value: url,
-                valueColor: theme.accentBlueLt,
-                copyAction: { vault.copyToClipboard(url, fieldName: "url") },
-                isCopied: vault.copiedField == "url"
-            )
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("URL")
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(theme.textFaint)
+                        .tracking(1)
+                    Text(url)
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(theme.accentBlueLt)
+                        .onHover { hovering in
+                            if hovering {
+                                NSCursor.pointingHand.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
+                        .onTapGesture {
+                            let urlString = url.hasPrefix("http://") || url.hasPrefix("https://") ? url : "https://\(url)"
+                            if let openURL = URL(string: urlString) {
+                                NSWorkspace.shared.open(openURL)
+                            }
+                        }
+                }
+                Spacer()
+                IconButton(
+                    icon: vault.copiedField == "url" ? "checkmark" : "doc.on.doc",
+                    isActive: vault.copiedField == "url",
+                    action: { vault.copyToClipboard(url, fieldName: "url") }
+                )
+            }
+            .padding(12)
+            .background(theme.fieldBg)
+            .cornerRadius(8)
         }
 
         if let username = item.username {
