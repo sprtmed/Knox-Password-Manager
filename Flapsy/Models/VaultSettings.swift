@@ -26,6 +26,7 @@ struct VaultSettings: Codable {
     var biometricEnabled: Bool
     var defaultFavoritesFilter: Bool
     var confirmBeforeDelete: Bool
+    var checkForUpdates: Bool
 
     static var defaults: VaultSettings {
         VaultSettings(
@@ -39,7 +40,8 @@ struct VaultSettings: Codable {
             theme: "dark",
             biometricEnabled: false,
             defaultFavoritesFilter: false,
-            confirmBeforeDelete: true
+            confirmBeforeDelete: true,
+            checkForUpdates: true
         )
     }
 
@@ -57,6 +59,7 @@ struct VaultSettings: Codable {
         biometricEnabled = try container.decodeIfPresent(Bool.self, forKey: .biometricEnabled) ?? false
         defaultFavoritesFilter = try container.decodeIfPresent(Bool.self, forKey: .defaultFavoritesFilter) ?? false
         confirmBeforeDelete = try container.decodeIfPresent(Bool.self, forKey: .confirmBeforeDelete) ?? true
+        checkForUpdates = try container.decodeIfPresent(Bool.self, forKey: .checkForUpdates) ?? true
     }
 
     init(menuBarIcon: String, menuBarShowLabel: Bool, menuBarLabel: String,
@@ -64,7 +67,8 @@ struct VaultSettings: Codable {
          clipboardClearEnabled: Bool, clipboardClearSeconds: Int,
          theme: String, biometricEnabled: Bool = false,
          defaultFavoritesFilter: Bool = false,
-         confirmBeforeDelete: Bool = true) {
+         confirmBeforeDelete: Bool = true,
+         checkForUpdates: Bool = true) {
         self.menuBarIcon = menuBarIcon
         self.menuBarShowLabel = menuBarShowLabel
         self.menuBarLabel = menuBarLabel
@@ -76,5 +80,6 @@ struct VaultSettings: Codable {
         self.biometricEnabled = biometricEnabled
         self.defaultFavoritesFilter = defaultFavoritesFilter
         self.confirmBeforeDelete = confirmBeforeDelete
+        self.checkForUpdates = checkForUpdates
     }
 }

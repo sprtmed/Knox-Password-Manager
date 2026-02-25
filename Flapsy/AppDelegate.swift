@@ -84,7 +84,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             settingsViewModel.$menuBarIcon.map { _ in () }.eraseToAnyPublisher(),
             settingsViewModel.$autoLockEnabled.map { _ in () }.eraseToAnyPublisher(),
             settingsViewModel.$clipboardClearEnabled.map { _ in () }.eraseToAnyPublisher(),
-            settingsViewModel.$biometricEnabled.map { _ in () }.eraseToAnyPublisher()
+            settingsViewModel.$biometricEnabled.map { _ in () }.eraseToAnyPublisher(),
+            settingsViewModel.$checkForUpdates.map { _ in () }.eraseToAnyPublisher()
         )
         .dropFirst()
         .debounce(for: .milliseconds(500), scheduler: RunLoop.main)

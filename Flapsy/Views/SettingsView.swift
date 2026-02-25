@@ -15,6 +15,7 @@ struct SettingsView: View {
                 clipboardSection
                 favoritesDefaultSection
                 deleteConfirmSection
+                updateCheckSection
                 secretKeySection
                 changePasswordSection
                 dataSection
@@ -448,6 +449,30 @@ struct SettingsView: View {
         .padding(.vertical, 4)
     }
 
+    // MARK: - Update Check
+
+    private var updateCheckSection: some View {
+        VStack(spacing: 4) {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.down.circle")
+                        .font(.system(size: 14))
+                        .foregroundColor(theme.accentBlueLt)
+                    Text("Check for Updates")
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(theme.text)
+                }
+                Spacer()
+                FlapsyToggle(isOn: $settings.checkForUpdates)
+            }
+            .padding(.vertical, 4)
+            Text("Checks GitHub for new releases on launch. No data is sent.")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundColor(theme.textFaint)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
     // MARK: - Import / Export
 
     private var dataSection: some View {
@@ -541,7 +566,7 @@ struct SettingsView: View {
                 securityRow("Clipboard", value: "Concealed + auto-clear")
                 securityRow("Min password", value: "12 characters")
                 securityRow("Storage", value: "Local only")
-                securityRow("Network", value: "None")
+                securityRow("Network", value: settings.checkForUpdates ? "Update check only" : "None")
                 securityRow("Biometrics", value: "Touch ID")
             }
         }

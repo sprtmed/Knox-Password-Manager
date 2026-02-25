@@ -211,7 +211,7 @@ struct LockScreenView: View {
                         .foregroundColor(theme.textGhost)
                 }
 
-                // Update available
+                // Version info
                 if updateCheck.updateAvailable, let version = updateCheck.latestVersion {
                     Button(action: {
                         if let url = URL(string: "https://github.com/sprtmed/knox/releases/latest") {
@@ -227,6 +227,10 @@ struct LockScreenView: View {
                         .foregroundColor(theme.accentBlueLt)
                     }
                     .buttonStyle(.plain)
+                } else {
+                    Text("v\(updateCheck.currentVersion)")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(theme.textGhost)
                 }
 
                 Spacer()

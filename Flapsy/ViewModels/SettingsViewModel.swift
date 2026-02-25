@@ -22,6 +22,9 @@ final class SettingsViewModel: ObservableObject {
     @Published var biometricEnabled: Bool = false
     @Published var defaultFavoritesFilter: Bool = false
     @Published var confirmBeforeDelete: Bool = true
+    @Published var checkForUpdates: Bool = true {
+        didSet { UpdateCheckService.isEnabled = checkForUpdates }
+    }
 
     // Import/Export feedback
     @Published var showImportSuccess: Bool = false
@@ -53,6 +56,7 @@ final class SettingsViewModel: ObservableObject {
         biometricEnabled = settings.biometricEnabled
         defaultFavoritesFilter = settings.defaultFavoritesFilter
         confirmBeforeDelete = settings.confirmBeforeDelete
+        checkForUpdates = settings.checkForUpdates
     }
 
     func resetToDefaults() {
@@ -67,6 +71,7 @@ final class SettingsViewModel: ObservableObject {
         biometricEnabled = false
         defaultFavoritesFilter = false
         confirmBeforeDelete = true
+        checkForUpdates = true
     }
 
     func toVaultSettings() -> VaultSettings {
@@ -81,7 +86,8 @@ final class SettingsViewModel: ObservableObject {
             theme: theme,
             biometricEnabled: biometricEnabled,
             defaultFavoritesFilter: defaultFavoritesFilter,
-            confirmBeforeDelete: confirmBeforeDelete
+            confirmBeforeDelete: confirmBeforeDelete,
+            checkForUpdates: checkForUpdates
         )
     }
 }

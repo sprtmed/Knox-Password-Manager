@@ -173,7 +173,7 @@ struct VaultListView: View {
     private var footer: some View {
         VStack(spacing: 4) {
             HStack {
-                Text("\(vault.items.count) items \u{00B7} AES-256")
+                Text("\(vault.items.count) items \u{00B7} AES-256 \u{00B7} v\(updateCheck.currentVersion)")
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundColor(theme.textGhost)
                 Spacer()

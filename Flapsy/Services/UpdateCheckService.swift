@@ -7,16 +7,30 @@ final class UpdateCheckService: ObservableObject {
     @Published var updateAvailable = false
     @Published var latestVersion: String?
 
+    private static let enabledKey = "com.knox.checkForUpdates"
     private let releasesURL = "https://api.github.com/repos/sprtmed/knox/releases/latest"
     private var hasChecked = false
 
-    private var currentVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0"
+    /// Read/write the opt-in preference via UserDefaults (available before vault unlock)
+    static var isEnabled: Bool {
+        get {
+            // Default to true if key has never been set
+            if UserDefaults.standard.object(forKey: enabledKey) == nil { return true }
+            return UserDefaults.standard.bool(forKey: enabledKey)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: enabledKey) }
     }
+
+    /// Current app version from the built binary
+    let currentVersion: String = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0"
 
     func checkForUpdate() {
         guard !hasChecked else { return }
         hasChecked = true
+        guard Self.isEnabled else {
+            logger.info("Update check disabled by user")
+            return
+        }
 
         Task.detached(priority: .utility) { [weak self] in
             guard let self else { return }
@@ -37,15 +51,14 @@ final class UpdateCheckService: ObservableObject {
                     ? String(release.tag_name.dropFirst())
                     : release.tag_name
 
-                let isNewer = self.compareVersions(remote, self.currentVersion)
+                let local = self.currentVersion
+                let isNewer = self.compareVersions(remote, local)
+                logger.info("Version check: local=\(local, privacy: .public) remote=\(remote, privacy: .public) newer=\(isNewer, privacy: .public)")
 
                 await MainActor.run {
                     if isNewer {
                         self.updateAvailable = true
                         self.latestVersion = remote
-                        logger.info("Update available: v\(remote, privacy: .public)")
-                    } else {
-                        logger.info("App is up to date (v\(self.currentVersion, privacy: .public))")
                     }
                 }
             } catch {
