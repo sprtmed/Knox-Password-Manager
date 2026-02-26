@@ -229,11 +229,32 @@ final class VaultViewModel: ObservableObject {
         }
 
         return filtered.compactMap { item -> (VaultItem, Int)? in
+            let query = searchText.lowercased()
+            let nameLower = item.name.lowercased()
+            let userLower = (item.username ?? "").lowercased()
+            let urlLower = (item.url ?? "").lowercased()
+
+            // Substring matches — always include, ranked highest
+            let nameContains = nameLower.contains(query)
+            let userContains = userLower.contains(query)
+            let urlContains = urlLower.contains(query)
+
+            if nameContains || userContains || urlContains {
+                var score = 100
+                if nameLower.hasPrefix(query) { score += 50 }
+                else if nameContains { score += 25 }
+                if userContains { score += 10 }
+                if urlContains { score += 5 }
+                return (item, score)
+            }
+
+            // Fuzzy matching — require minimum quality to filter weak matches
             let nameScore = FuzzySearch.match(query: searchText, in: item.name)?.score ?? 0
             let userScore = FuzzySearch.match(query: searchText, in: item.username ?? "")?.score ?? 0
             let urlScore = FuzzySearch.match(query: searchText, in: item.url ?? "")?.score ?? 0
             let bestScore = max(nameScore, userScore, urlScore)
-            guard bestScore > 0 else { return nil }
+            let minScore = max(searchText.count * 3, 5)
+            guard bestScore >= minScore else { return nil }
             return (item, bestScore)
         }
         .sorted { a, b in

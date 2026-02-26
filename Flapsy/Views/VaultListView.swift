@@ -41,8 +41,8 @@ struct VaultListView: View {
 
     private var searchBar: some View {
         HStack(spacing: 0) {
-            Text("\u{2315}")
-                .font(.system(size: 13))
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 15, weight: .medium))
                 .foregroundColor(theme.textFaint)
                 .padding(.leading, 10)
 
