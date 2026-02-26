@@ -214,7 +214,7 @@ struct LockScreenView: View {
                 // Version info
                 if updateCheck.updateAvailable, let version = updateCheck.latestVersion {
                     Button(action: {
-                        if let url = URL(string: "https://github.com/sprtmed/knox/releases/latest") {
+                        if let url = URL(string: "https://github.com/sprtmed/Knox-Password-Manager/releases/latest") {
                             NSWorkspace.shared.open(url)
                         }
                     }) {

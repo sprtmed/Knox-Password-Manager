@@ -91,8 +91,8 @@ These are OS-level threats, not application-level ones.
 
 ```bash
 # Clone the repo
-git clone https://github.com/sprtmed/knox.git
-cd knox
+git clone https://github.com/sprtmed/Knox-Password-Manager.git
+cd Knox-Password-Manager
 
 # Generate Xcode project
 xcodegen generate

@@ -8,7 +8,7 @@ final class UpdateCheckService: ObservableObject {
     @Published var latestVersion: String?
 
     private static let enabledKey = "com.knox.checkForUpdates"
-    private let releasesURL = "https://api.github.com/repos/sprtmed/knox/releases/latest"
+    private let releasesURL = "https://api.github.com/repos/sprtmed/Knox-Password-Manager/releases/latest"
     private var hasChecked = false
 
     /// Read/write the opt-in preference via UserDefaults (available before vault unlock)

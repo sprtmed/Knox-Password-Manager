@@ -6,6 +6,16 @@ struct ItemDetailView: View {
     @Environment(\.theme) var theme
     @State private var showDeleteConfirmation = false
 
+    private func dismissDetail() {
+        withAnimation(.easeInOut(duration: 0.15)) {
+            vault.selectedItemID = nil
+            vault.showPassword = false
+            vault.showCardNumber = false
+            vault.showCVV = false
+            vault.isEditingItem = false
+        }
+    }
+
     var body: some View {
         if let item = vault.selectedItem {
             if vault.isEditingItem {
@@ -22,19 +32,35 @@ struct ItemDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 // Header
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
+                    // Close button
+                    Button(action: { dismissDetail() }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(theme.textFaint)
+                    }
+                    .buttonStyle(.plain)
+
+                    // Tappable icon + name area (click to dismiss)
                     let catColor = vault.categoryFor(key: item.category)?.color ?? "8b5cf6"
                     let colors = theme.categoryColors(hex: catColor)
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(colors.background)
-                            .frame(width: 28, height: 28)
-                        typeIcon(for: item)
+                    HStack(spacing: 10) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(colors.background)
+                                .frame(width: 28, height: 28)
+                            typeIcon(for: item)
+                        }
+                        Text(item.name)
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundColor(theme.text)
+                            .lineLimit(1)
+                        Spacer()
                     }
-                    Text(item.name)
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
-                        .foregroundColor(theme.text)
-                    Spacer()
+                    .contentShape(Rectangle())
+                    .onTapGesture { dismissDetail() }
+
+                    // Action buttons (not dismissable)
                     Button(action: { vault.startEditing(item) }) {
                         Text("\u{270E}")
                             .font(.system(size: 12))
