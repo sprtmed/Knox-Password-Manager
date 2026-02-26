@@ -108,9 +108,17 @@ struct ItemDetailView: View {
             .padding(.vertical, 14)
         }
         .overlay(alignment: .top) {
-            Rectangle()
-                .fill(theme.cardBorder)
-                .frame(height: 1)
+            VStack(spacing: 0) {
+                Rectangle()
+                    .fill(theme.cardBorder)
+                    .frame(height: 1)
+                LinearGradient(
+                    colors: [Color.black.opacity(0.12), Color.black.opacity(0)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 8)
+            }
         }
         .transition(.move(edge: .bottom).combined(with: .opacity))
         .alert("Delete Item", isPresented: $showDeleteConfirmation) {
@@ -229,9 +237,17 @@ struct ItemDetailView: View {
             .padding(.vertical, 14)
         }
         .overlay(alignment: .top) {
-            Rectangle()
-                .fill(theme.cardBorder)
-                .frame(height: 1)
+            VStack(spacing: 0) {
+                Rectangle()
+                    .fill(theme.cardBorder)
+                    .frame(height: 1)
+                LinearGradient(
+                    colors: [Color.black.opacity(0.12), Color.black.opacity(0)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 8)
+            }
         }
         .frame(maxHeight: 320)
         .transition(.move(edge: .bottom).combined(with: .opacity))
