@@ -157,7 +157,6 @@ struct VaultHealthView: View {
                         )
                     }
                     .buttonStyle(.plain)
-                    .help(compact && option != .all ? option.rawValue : "")
                 }
                 Spacer()
             }

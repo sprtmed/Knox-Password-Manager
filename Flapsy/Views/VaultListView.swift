@@ -164,7 +164,7 @@ struct VaultListView: View {
                 }
             }
         }
-        .frame(maxHeight: vault.selectedItemID != nil ? 180 : .infinity)
+        .frame(maxHeight: vault.selectedItemID != nil ? 120 : .infinity)
         .layoutPriority(1)
     }
 
