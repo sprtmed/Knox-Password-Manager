@@ -124,38 +124,45 @@ struct VaultHealthView: View {
     // MARK: - Filter Bar
 
     private var filterBar: some View {
-        HStack(spacing: 6) {
-            ForEach(HealthFilter.allCases, id: \.self) { option in
-                let count = filterCount(for: option)
-                let isActive = filter == option
-                Button(action: { withAnimation(.easeInOut(duration: 0.2)) { filter = option } }) {
-                    HStack(spacing: 4) {
-                        if option != .all {
-                            Image(systemName: filterIcon(for: option))
-                                .font(.system(size: 9))
+        GeometryReader { geo in
+            let compact = geo.size.width < 380
+            HStack(spacing: 6) {
+                ForEach(HealthFilter.allCases, id: \.self) { option in
+                    let count = filterCount(for: option)
+                    let isActive = filter == option
+                    Button(action: { withAnimation(.easeInOut(duration: 0.2)) { filter = option } }) {
+                        HStack(spacing: 4) {
+                            if option != .all {
+                                Image(systemName: filterIcon(for: option))
+                                    .font(.system(size: 9))
+                            }
+                            if !compact || option == .all {
+                                Text(option.rawValue)
+                                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            }
+                            if option != .all && count > 0 {
+                                Text("\(count)")
+                                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                    .foregroundColor(isActive ? filterColor(for: option) : theme.textFaint)
+                            }
                         }
-                        Text(option.rawValue)
-                            .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        if option != .all && count > 0 {
-                            Text("\(count)")
-                                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                                .foregroundColor(isActive ? filterColor(for: option) : theme.textFaint)
-                        }
+                        .foregroundColor(isActive ? filterColor(for: option) : theme.textSecondary)
+                        .padding(.horizontal, compact && option != .all ? 7 : 10)
+                        .padding(.vertical, 5)
+                        .background(isActive ? filterColor(for: option).opacity(0.12) : theme.fieldBg)
+                        .cornerRadius(6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(isActive ? filterColor(for: option).opacity(0.3) : Color.clear, lineWidth: 1)
+                        )
                     }
-                    .foregroundColor(isActive ? filterColor(for: option) : theme.textSecondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(isActive ? filterColor(for: option).opacity(0.12) : theme.fieldBg)
-                    .cornerRadius(6)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(isActive ? filterColor(for: option).opacity(0.3) : Color.clear, lineWidth: 1)
-                    )
+                    .buttonStyle(.plain)
+                    .help(compact && option != .all ? option.rawValue : "")
                 }
-                .buttonStyle(.plain)
+                Spacer()
             }
-            Spacer()
         }
+        .frame(height: 28)
     }
 
     private func filterIcon(for option: HealthFilter) -> String {
