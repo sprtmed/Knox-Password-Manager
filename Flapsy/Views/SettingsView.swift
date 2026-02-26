@@ -14,6 +14,7 @@ struct SettingsView: View {
                 autoLockSection
                 touchIDSection
                 clipboardSection
+                openURLCopySection
                 favoritesDefaultSection
                 deleteConfirmSection
                 updateCheckSection
@@ -435,6 +436,30 @@ struct SettingsView: View {
                 }
                 .padding(.leading, 4)
             }
+        }
+    }
+
+    // MARK: - Open URL + Copy Password
+
+    private var openURLCopySection: some View {
+        VStack(spacing: 4) {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.up.forward.app")
+                        .font(.system(size: 14))
+                        .foregroundColor(theme.accentBlueLt)
+                    Text("Open URL + Copy Password")
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(theme.text)
+                }
+                Spacer()
+                FlapsyToggle(isOn: $settings.openURLCopyPassword)
+            }
+            .padding(.vertical, 4)
+            Text("Shows a launch button that copies the password and opens the URL in your browser.")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundColor(theme.textFaint)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

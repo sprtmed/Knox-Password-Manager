@@ -442,11 +442,27 @@ struct ItemDetailView: View {
                         }
                 }
                 Spacer()
-                IconButton(
-                    icon: vault.copiedField == "url" ? "checkmark" : "doc.on.doc",
-                    isActive: vault.copiedField == "url",
-                    action: { vault.copyToClipboard(url, fieldName: "url") }
-                )
+                HStack(spacing: 4) {
+                    if settings.openURLCopyPassword,
+                       let password = item.password, !password.isEmpty {
+                        IconButton(
+                            icon: vault.copiedField == "pass" ? "checkmark" : "arrow.up.forward.app",
+                            isActive: vault.copiedField == "pass",
+                            action: {
+                                vault.copyToClipboard(password, fieldName: "pass")
+                                let urlString = url.hasPrefix("http://") || url.hasPrefix("https://") ? url : "https://\(url)"
+                                if let openURL = URL(string: urlString) {
+                                    NSWorkspace.shared.open(openURL)
+                                }
+                            }
+                        )
+                    }
+                    IconButton(
+                        icon: vault.copiedField == "url" ? "checkmark" : "doc.on.doc",
+                        isActive: vault.copiedField == "url",
+                        action: { vault.copyToClipboard(url, fieldName: "url") }
+                    )
+                }
             }
             .padding(12)
             .background(theme.fieldBg)

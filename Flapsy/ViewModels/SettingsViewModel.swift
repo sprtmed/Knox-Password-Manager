@@ -26,6 +26,7 @@ final class SettingsViewModel: ObservableObject {
         didSet { UpdateCheckService.isEnabled = checkForUpdates }
     }
     @Published var keepWindowOpen: Bool = false
+    @Published var openURLCopyPassword: Bool = false
 
     // Runtime-only: current pin state for this session (not persisted)
     @Published var isWindowPinned: Bool = false
@@ -63,6 +64,7 @@ final class SettingsViewModel: ObservableObject {
         checkForUpdates = settings.checkForUpdates
         keepWindowOpen = settings.keepWindowOpen
         isWindowPinned = settings.keepWindowOpen
+        openURLCopyPassword = settings.openURLCopyPassword
     }
 
     func resetToDefaults() {
@@ -80,6 +82,7 @@ final class SettingsViewModel: ObservableObject {
         checkForUpdates = true
         keepWindowOpen = false
         isWindowPinned = false
+        openURLCopyPassword = false
     }
 
     func toVaultSettings() -> VaultSettings {
@@ -96,7 +99,8 @@ final class SettingsViewModel: ObservableObject {
             defaultFavoritesFilter: defaultFavoritesFilter,
             confirmBeforeDelete: confirmBeforeDelete,
             checkForUpdates: checkForUpdates,
-            keepWindowOpen: keepWindowOpen
+            keepWindowOpen: keepWindowOpen,
+            openURLCopyPassword: openURLCopyPassword
         )
     }
 }

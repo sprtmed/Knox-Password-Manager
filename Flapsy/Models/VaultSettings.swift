@@ -28,6 +28,7 @@ struct VaultSettings: Codable {
     var confirmBeforeDelete: Bool
     var checkForUpdates: Bool
     var keepWindowOpen: Bool
+    var openURLCopyPassword: Bool
 
     static var defaults: VaultSettings {
         VaultSettings(
@@ -43,7 +44,8 @@ struct VaultSettings: Codable {
             defaultFavoritesFilter: false,
             confirmBeforeDelete: true,
             checkForUpdates: true,
-            keepWindowOpen: false
+            keepWindowOpen: false,
+            openURLCopyPassword: false
         )
     }
 
@@ -63,6 +65,7 @@ struct VaultSettings: Codable {
         confirmBeforeDelete = try container.decodeIfPresent(Bool.self, forKey: .confirmBeforeDelete) ?? true
         checkForUpdates = try container.decodeIfPresent(Bool.self, forKey: .checkForUpdates) ?? true
         keepWindowOpen = try container.decodeIfPresent(Bool.self, forKey: .keepWindowOpen) ?? false
+        openURLCopyPassword = try container.decodeIfPresent(Bool.self, forKey: .openURLCopyPassword) ?? false
     }
 
     init(menuBarIcon: String, menuBarShowLabel: Bool, menuBarLabel: String,
@@ -72,7 +75,8 @@ struct VaultSettings: Codable {
          defaultFavoritesFilter: Bool = false,
          confirmBeforeDelete: Bool = true,
          checkForUpdates: Bool = true,
-         keepWindowOpen: Bool = false) {
+         keepWindowOpen: Bool = false,
+         openURLCopyPassword: Bool = false) {
         self.menuBarIcon = menuBarIcon
         self.menuBarShowLabel = menuBarShowLabel
         self.menuBarLabel = menuBarLabel
@@ -86,5 +90,6 @@ struct VaultSettings: Codable {
         self.confirmBeforeDelete = confirmBeforeDelete
         self.checkForUpdates = checkForUpdates
         self.keepWindowOpen = keepWindowOpen
+        self.openURLCopyPassword = openURLCopyPassword
     }
 }
