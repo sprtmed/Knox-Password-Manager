@@ -492,19 +492,20 @@ final class VaultViewModel: ObservableObject {
                     self.needsSecretKeyRecovery = false
                     self.setupAutoSave()
 
-                    // Sync biometric state
-                    if self.settingsViewModel?.biometricEnabled == true &&
-                       !KeychainService.shared.hasDerivedKey {
-                        self.settingsViewModel?.biometricEnabled = false
-                        KeychainService.biometricEnabledFlag = false
-                    }
-
-                    // Refresh biometric key
+                    // Refresh biometric key (must run before sync check so
+                    // the key is re-stored under the current access group)
                     if self.settingsViewModel?.biometricEnabled == true,
                        var keyData = self.encryption.currentKeyData {
                         KeychainService.shared.storeDerivedKey(keyData)
                         keyData.resetBytes(in: 0..<keyData.count)
                         KeychainService.biometricEnabledFlag = true
+                    }
+
+                    // Sync biometric state: if store failed, disable biometric
+                    if self.settingsViewModel?.biometricEnabled == true &&
+                       !KeychainService.shared.hasDerivedKey {
+                        self.settingsViewModel?.biometricEnabled = false
+                        KeychainService.biometricEnabledFlag = false
                     }
 
                     // If v1 vault, migrate to v2 (Argon2id + Secret Key)
