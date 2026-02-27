@@ -452,7 +452,9 @@ struct ItemDetailView: View {
                                 vault.copyToClipboard(password, fieldName: "pass")
                                 let urlString = url.hasPrefix("http://") || url.hasPrefix("https://") ? url : "https://\(url)"
                                 if let openURL = URL(string: urlString) {
-                                    NSWorkspace.shared.open(openURL)
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                        NSWorkspace.shared.open(openURL)
+                                    }
                                 }
                             }
                         )
