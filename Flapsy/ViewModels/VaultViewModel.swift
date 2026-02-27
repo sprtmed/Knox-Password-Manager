@@ -658,6 +658,15 @@ final class VaultViewModel: ObservableObject {
 
     func lock() {
         persistVault()
+
+        // Re-store key with current SecAccessControl (biometric ACL) before wiping.
+        // Migrates pre-audit keys that lack biometric protection.
+        if self.settingsViewModel?.biometricEnabled == true,
+           var keyData = encryption.currentKeyData {
+            KeychainService.shared.storeDerivedKey(keyData)
+            keyData.resetBytes(in: 0..<keyData.count)
+        }
+
         storage.lockVault()
 
         isUnlocked = false
