@@ -4,7 +4,11 @@ import LocalAuthentication
 import os.log
 
 /// Manages storing/retrieving the vault's derived encryption key in Keychain
-/// with biometric (Touch ID) protection.
+/// with application-level biometric (Touch ID) protection.
+///
+/// Uses app-level LAContext authentication instead of Keychain-level SecAccessControl
+/// biometry, because the latter requires the restricted `keychain-access-groups`
+/// entitlement which blocks Developer ID (non-App Store) apps from launching.
 final class KeychainService {
     static let shared = KeychainService()
 
@@ -14,33 +18,21 @@ final class KeychainService {
 
     private init() {}
 
-    // MARK: - Store Key with Biometric Protection
+    // MARK: - Store Key
 
-    /// Stores the 32-byte derived key in Keychain protected by Touch ID.
-    /// The key is invalidated if biometric enrollment changes (.biometryCurrentSet).
+    /// Stores the 32-byte derived key in Keychain (device-only, accessible when unlocked).
+    /// Biometric auth is enforced at the application level on retrieval, not at the Keychain level.
     @discardableResult
     func storeDerivedKey(_ keyData: Data) -> Bool {
         // Delete any existing item first
         deleteDerivedKey()
-
-        var acError: Unmanaged<CFError>?
-        guard let accessControl = SecAccessControlCreateWithFlags(
-            kCFAllocatorDefault,
-            kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            .biometryCurrentSet,
-            &acError
-        ) else {
-            os_log(.error, log: log, "SecAccessControl creation failed: %{public}@",
-                   acError?.takeRetainedValue().localizedDescription ?? "unknown")
-            return false
-        }
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
             kSecValueData as String: keyData,
-            kSecAttrAccessControl as String: accessControl
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
         ]
 
         let status = SecItemAdd(query as CFDictionary, nil)
@@ -52,21 +44,29 @@ final class KeychainService {
 
     // MARK: - Retrieve Key with Biometric Auth
 
-    /// Retrieves the derived key from Keychain. Triggers Touch ID automatically.
+    /// Authenticates the user with Touch ID, then retrieves the derived key from Keychain.
     func retrieveDerivedKey(reason: String, completion: @escaping (Data?) -> Void) {
         let context = LAContext()
         context.localizedFallbackTitle = "" // Hide "Enter Password" fallback
 
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecReturnData as String: true,
-            kSecUseAuthenticationContext as String: context,
-            kSecUseOperationPrompt as String: reason
-        ]
+        // Step 1: Authenticate with Touch ID at the application level
+        context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { [self] success, error in
+            guard success else {
+                if let error = error {
+                    os_log(.error, log: log, "Touch ID auth failed: %{public}@", error.localizedDescription)
+                }
+                DispatchQueue.main.async { completion(nil) }
+                return
+            }
 
-        DispatchQueue.global(qos: .userInitiated).async {
+            // Step 2: Retrieve from Keychain (no biometric gate at Keychain level)
+            let query: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: account,
+                kSecReturnData as String: true
+            ]
+
             var result: AnyObject?
             let status = SecItemCopyMatching(query as CFDictionary, &result)
 
@@ -74,6 +74,9 @@ final class KeychainService {
                 if status == errSecSuccess, let data = result as? Data {
                     completion(data)
                 } else {
+                    if status != errSecSuccess {
+                        os_log(.error, log: self.log, "SecItemCopyMatching failed: %{public}d", status)
+                    }
                     completion(nil)
                 }
             }
@@ -99,12 +102,10 @@ final class KeychainService {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail
+            kSecAttrAccount as String: account
         ]
         let status = SecItemCopyMatching(query as CFDictionary, nil)
-        // errSecInteractionNotAllowed means the item exists but requires biometric auth
-        return status == errSecSuccess || status == errSecInteractionNotAllowed
+        return status == errSecSuccess
     }
 
     // MARK: - Biometric Enabled Flag (UserDefaults)
