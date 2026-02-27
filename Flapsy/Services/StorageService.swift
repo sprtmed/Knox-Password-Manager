@@ -124,13 +124,17 @@ final class StorageService {
 
     /// Reads the vault version from the file header.
     /// Returns .v1 for legacy files without a header.
-    func readVaultVersion() -> VaultKeyVersion {
+    /// Throws for unrecognized version numbers to prevent silent misinterpretation.
+    func readVaultVersion() throws -> VaultKeyVersion {
         guard let fileData = try? Data(contentsOf: vaultFileURL),
               fileData.count > StorageService.vaultHeaderSize else { return .v1 }
         let magic = String(data: fileData[0..<4], encoding: .ascii)
         guard magic == StorageService.vaultMagic else { return .v1 }  // legacy: no header
         let version = fileData[4..<8].withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
-        return VaultKeyVersion(rawValue: version) ?? .v1
+        guard let knownVersion = VaultKeyVersion(rawValue: version) else {
+            throw EncryptionError.unsupportedVaultVersion(version)
+        }
+        return knownVersion
     }
 
     /// Reads the encrypted payload from the vault file, stripping the header if present.
@@ -221,7 +225,7 @@ final class StorageService {
     /// On success the key stays in EncryptionService memory.
     /// Returns (VaultData, needsMigration). needsMigration is true for v1 vaults.
     func unlockVault(masterPassword: String) throws -> (VaultData, Bool) {
-        let version = readVaultVersion()
+        let version = try readVaultVersion()
         let salt = try readSaltWithFallback()
         let encryptedData = try readEncryptedVaultData()
 
@@ -327,7 +331,7 @@ final class StorageService {
     func saveVault(_ vault: VaultData) throws {
         let encrypted = try encryption.encryptVault(vault)
         let salt = try readSalt()
-        let version = readVaultVersion()
+        let version = try readVaultVersion()
         try writeEncryptedVaultData(encrypted, salt: salt, version: version)
     }
 

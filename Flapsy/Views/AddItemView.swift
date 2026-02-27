@@ -183,10 +183,7 @@ struct AddItemView: View {
                 }
 
                 Button(action: {
-                    vault.newPassword = String((0..<20).map { _ in
-                        let chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*()_+-="
-                        return chars.randomElement()!
-                    })
+                    vault.newPassword = GeneratorViewModel.secureRandomPassword()
                 }) {
                     Text("\u{26A1} Gen")
                         .font(.system(size: 12, weight: .semibold, design: .monospaced))

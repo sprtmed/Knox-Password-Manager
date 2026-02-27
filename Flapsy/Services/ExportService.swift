@@ -56,29 +56,27 @@ final class ExportService {
 
     // MARK: - Export Encrypted Backup
 
-    /// Creates an encrypted .knox backup file using the full HKDF key chain.
+    /// Creates an encrypted .knox backup file using Argon2id key derivation.
     ///
-    /// Version 2 format:
+    /// Version 3 format (password-only — no Secret Key needed for restore):
     ///   4 bytes: magic "FLPY"
-    ///   4 bytes: version (UInt32 big-endian, 2)
+    ///   4 bytes: version (UInt32 big-endian, 3)
     ///   32 bytes: salt
-    ///   16 bytes: backup-specific Secret Key
     ///   remaining: AES-256-GCM encrypted VaultData JSON
     ///
-    /// Key derivation: Argon2id(password, salt) → HKDF-SHA256(ikm, secretKey) → AES key
+    /// Key derivation: Argon2id(password, salt) → 256-bit AES key
     func exportEncryptedBackup(vault: VaultData, password: String, to url: URL) throws {
         guard !vault.items.isEmpty else { throw ExportError.noItems }
 
-        // Generate a fresh salt and backup-specific Secret Key
+        // Generate a fresh salt
         let salt = EncryptionService.shared.generateSalt(byteCount: 32)
-        let backupSecretKey = SecretKeyService.shared.generateSecretKey()  // 16 bytes
 
-        // Derive key using the full v2 chain (Argon2id + HKDF)
-        guard let key = EncryptionService.deriveKeyV2Standalone(
-            from: password, salt: salt, secretKey: backupSecretKey
-        ) else {
+        // Derive key using Argon2id only (no Secret Key — backup is self-contained)
+        guard var argon2Output = Argon2Service.shared.deriveKey(from: password, salt: salt) else {
             throw ExportError.encryptionFailed
         }
+        let key = SymmetricKey(data: argon2Output)
+        argon2Output.resetBytes(in: 0..<argon2Output.count)
 
         // Encode vault to JSON
         let encoder = JSONEncoder()
@@ -88,15 +86,14 @@ final class ExportService {
         // Encrypt
         let encrypted = try EncryptionService.shared.encrypt(json, using: key)
 
-        // Build file: magic + version + salt + secretKey + encrypted
+        // Build file: magic + version + salt + encrypted
         var fileData = Data()
         fileData.append("FLPY".data(using: .ascii)!)  // 4 bytes magic
 
-        var version = UInt32(2).bigEndian
+        var version = UInt32(3).bigEndian
         fileData.append(Data(bytes: &version, count: 4))  // 4 bytes version
 
         fileData.append(salt)  // 32 bytes salt
-        fileData.append(backupSecretKey)  // 16 bytes secret key
         fileData.append(encrypted)  // encrypted payload
 
         try fileData.write(to: url, options: [.atomic, .completeFileProtection])

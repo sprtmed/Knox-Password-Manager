@@ -1161,7 +1161,8 @@ final class VaultViewModel: ObservableObject {
             guard let self = self else { return }
 
             guard let saltData = try? self.storage.readSalt(),
-                  let encryptedData = try? self.storage.readEncryptedVaultData() else {
+                  let encryptedData = try? self.storage.readEncryptedVaultData(),
+                  let version = try? self.storage.readVaultVersion() else {
                 DispatchQueue.main.async {
                     self.exportError = "Could not verify password"
                     self.isExporting = false
@@ -1170,7 +1171,6 @@ final class VaultViewModel: ObservableObject {
             }
 
             // Use version-aware standalone derivation
-            let version = self.storage.readVaultVersion()
             let secretKey = SecretKeyService.shared.retrieveSecretKey()
             guard let testKey = EncryptionService.deriveKeyStandalone(
                 from: pw, salt: saltData, version: version, secretKey: secretKey
@@ -1341,7 +1341,8 @@ final class VaultViewModel: ObservableObject {
             guard let self = self else { return }
 
             guard let saltData = try? self.storage.readSalt(),
-                  let encryptedData = try? self.storage.readEncryptedVaultData() else {
+                  let encryptedData = try? self.storage.readEncryptedVaultData(),
+                  let version = try? self.storage.readVaultVersion() else {
                 DispatchQueue.main.async {
                     self.changePasswordError = "Could not verify password"
                     self.isChangingPassword = false
@@ -1350,7 +1351,6 @@ final class VaultViewModel: ObservableObject {
             }
 
             // Verify old password using version-aware standalone derivation
-            let version = self.storage.readVaultVersion()
             let secretKey = SecretKeyService.shared.retrieveSecretKey()
             guard let testKey = EncryptionService.deriveKeyStandalone(
                 from: oldPw, salt: saltData, version: version, secretKey: secretKey

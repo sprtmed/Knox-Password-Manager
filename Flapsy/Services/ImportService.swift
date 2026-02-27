@@ -419,6 +419,13 @@ final class ImportService {
     ///   16 bytes: backup Secret Key
     ///   remaining: AES-256-GCM encrypted VaultData JSON
     ///   Key: Argon2id(password, salt) → HKDF-SHA256(ikm, secretKey)
+    ///
+    /// Version 3 (password-only):
+    ///   4 bytes: magic "FLPY"
+    ///   4 bytes: version (UInt32 big-endian, 3)
+    ///   32 bytes: salt
+    ///   remaining: AES-256-GCM encrypted VaultData JSON
+    ///   Key: Argon2id(password, salt)
     private func importKnoxBackup(_ url: URL, password: String) throws -> ImportResult {
         let data = try Data(contentsOf: url)
         guard data.count > 40 else { throw ImportError.parseError("File too small") }
@@ -434,8 +441,8 @@ final class ImportService {
         let encrypted: Data
 
         switch version {
-        case 1:
-            // Legacy: Argon2id only
+        case 1, 3:
+            // V1 (legacy) and V3 (password-only): Argon2id direct
             let salt = Data(data[8..<40])
             encrypted = Data(data[40...])
             guard let derivedKey = deriveKeyStandalone(from: password, salt: salt) else {

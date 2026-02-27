@@ -35,10 +35,11 @@ final class AutoLockService {
             self?.recordActivity()
         }
 
-        // System sleep / screen lock / fast user switch
+        // System sleep / screen lock / fast user switch / screen wake
         let ws = NSWorkspace.shared.notificationCenter
         ws.addObserver(self, selector: #selector(systemWillSleep), name: NSWorkspace.willSleepNotification, object: nil)
         ws.addObserver(self, selector: #selector(screenDidSleep), name: NSWorkspace.screensDidSleepNotification, object: nil)
+        ws.addObserver(self, selector: #selector(screenDidWake), name: NSWorkspace.screensDidWakeNotification, object: nil)
         ws.addObserver(self, selector: #selector(sessionDidResignActive), name: NSWorkspace.sessionDidResignActiveNotification, object: nil)
 
         // Check inactivity every 15 seconds
@@ -60,6 +61,7 @@ final class AutoLockService {
         let ws = NSWorkspace.shared.notificationCenter
         ws.removeObserver(self, name: NSWorkspace.willSleepNotification, object: nil)
         ws.removeObserver(self, name: NSWorkspace.screensDidSleepNotification, object: nil)
+        ws.removeObserver(self, name: NSWorkspace.screensDidWakeNotification, object: nil)
         ws.removeObserver(self, name: NSWorkspace.sessionDidResignActiveNotification, object: nil)
     }
 
@@ -97,6 +99,10 @@ final class AutoLockService {
     }
 
     @objc private func screenDidSleep(_ notification: Notification) {
+        triggerLock()
+    }
+
+    @objc private func screenDidWake(_ notification: Notification) {
         triggerLock()
     }
 

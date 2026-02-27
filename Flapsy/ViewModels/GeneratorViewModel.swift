@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import Security
 
 enum GeneratorType: String, CaseIterable {
     case random = "Random Password"
@@ -85,12 +86,10 @@ final class GeneratorViewModel: ObservableObject {
     }
 
     private func generateRandom() -> String {
-        var chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz"
-        if includeNumbers { chars += "23456789" }
-        if includeSymbols { chars += "!@#$%^&*()_+-=" }
-        let charArray = Array(chars)
-        let length = Int(characterCount)
-        return String((0..<length).map { _ in charArray[Int.random(in: 0..<charArray.count)] })
+        var charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz"
+        if includeNumbers { charset += "23456789" }
+        if includeSymbols { charset += "!@#$%^&*()_+-=" }
+        return Self.secureRandomPassword(length: Int(characterCount), charset: charset)
     }
 
     private func generateMemorable() -> String {
@@ -98,9 +97,9 @@ final class GeneratorViewModel: ObservableObject {
         var words: [String] = []
 
         for _ in 0..<count {
-            var word = Self.wordList.randomElement() ?? "word"
+            var word = Self.wordList[Self.secureRandomInt(upperBound: Self.wordList.count)]
             if !fullWords {
-                let end = min(word.count, 3 + Int.random(in: 0...1))
+                let end = min(word.count, 3 + Self.secureRandomInt(upperBound: 2))
                 word = String(word.prefix(end))
             }
             if capitalize {
@@ -111,7 +110,7 @@ final class GeneratorViewModel: ObservableObject {
 
         if separator == .numbers {
             return words.enumerated().map { index, word in
-                index < words.count - 1 ? word + String(Int.random(in: 0...9)) : word
+                index < words.count - 1 ? word + String(Self.secureRandomInt(upperBound: 10)) : word
             }.joined()
         }
 
@@ -120,7 +119,61 @@ final class GeneratorViewModel: ObservableObject {
 
     private func generatePIN() -> String {
         let length = Int(pinLength)
-        return (0..<length).map { _ in String(Int.random(in: 0...9)) }.joined()
+        return (0..<length).map { _ in String(Self.secureRandomInt(upperBound: 10)) }.joined()
+    }
+
+    // MARK: - Cryptographically Secure Random
+
+    /// Generates a password using SecRandomCopyBytes with rejection sampling to eliminate modulo bias.
+    static func secureRandomPassword(length: Int = 20, charset: String = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*()_+-=") -> String {
+        let chars = Array(charset)
+        guard !chars.isEmpty else { return "" }
+        let charCount = chars.count
+        let limit = 256 - (256 % charCount)
+
+        var result = [Character]()
+        result.reserveCapacity(length)
+
+        while result.count < length {
+            let batchSize = (length - result.count) * 2
+            var bytes = [UInt8](repeating: 0, count: batchSize)
+            guard SecRandomCopyBytes(kSecRandomDefault, batchSize, &bytes) == errSecSuccess else {
+                fatalError("SecRandomCopyBytes failed — cannot generate secure password")
+            }
+            for byte in bytes where result.count < length {
+                if Int(byte) < limit {
+                    result.append(chars[Int(byte) % charCount])
+                }
+            }
+        }
+
+        return String(result)
+    }
+
+    /// Returns a cryptographically secure random integer in [0, upperBound).
+    static func secureRandomInt(upperBound: Int) -> Int {
+        precondition(upperBound > 0)
+        if upperBound == 1 { return 0 }
+
+        if upperBound <= 256 {
+            let limit = 256 - (256 % upperBound)
+            while true {
+                var byte: UInt8 = 0
+                guard SecRandomCopyBytes(kSecRandomDefault, 1, &byte) == errSecSuccess else {
+                    fatalError("SecRandomCopyBytes failed")
+                }
+                if Int(byte) < limit { return Int(byte) % upperBound }
+            }
+        }
+
+        let limit = UInt32.max - (UInt32.max % UInt32(upperBound))
+        while true {
+            var value: UInt32 = 0
+            guard SecRandomCopyBytes(kSecRandomDefault, 4, &value) == errSecSuccess else {
+                fatalError("SecRandomCopyBytes failed")
+            }
+            if value < limit { return Int(value % UInt32(upperBound)) }
+        }
     }
 
     func copyGenerated() {
