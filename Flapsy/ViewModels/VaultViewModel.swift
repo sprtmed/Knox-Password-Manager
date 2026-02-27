@@ -1234,30 +1234,40 @@ final class VaultViewModel: ObservableObject {
         showBiometricPrompt = true
         biometricFailed = false
 
-        KeychainService.shared.retrieveDerivedKey(reason: "Unlock your Knox vault") { [weak self] keyData in
+        // Touch ID prompt via BiometricService, then read key from Keychain
+        BiometricService.shared.authenticate(reason: "Unlock your Knox vault") { [weak self] success, error in
             guard let self = self else { return }
-            self.showBiometricPrompt = false
 
-            guard let keyData = keyData else {
+            guard success else {
+                self.showBiometricPrompt = false
                 self.biometricFailed = true
                 return
             }
 
-            do {
-                let vaultData = try self.storage.unlockVault(withKeyData: keyData)
-                self.items = vaultData.items
-                self.categories = vaultData.categories
-                self.settingsViewModel?.loadFromVaultSettings(vaultData.settings)
-                self.isUnlocked = true
-                self.currentScreen = .vault
-                self.currentPanel = .list
-                self.showFavoritesOnly = self.settingsViewModel?.defaultFavoritesFilter ?? false
-                self.masterPasswordInput = ""
-                self.lockError = false
-                self.biometricFailed = false
-                self.setupAutoSave()
-            } catch {
-                self.biometricFailed = true
+            KeychainService.shared.retrieveDerivedKey { keyData in
+                self.showBiometricPrompt = false
+
+                guard let keyData = keyData else {
+                    self.biometricFailed = true
+                    return
+                }
+
+                do {
+                    let vaultData = try self.storage.unlockVault(withKeyData: keyData)
+                    self.items = vaultData.items
+                    self.categories = vaultData.categories
+                    self.settingsViewModel?.loadFromVaultSettings(vaultData.settings)
+                    self.isUnlocked = true
+                    self.currentScreen = .vault
+                    self.currentPanel = .list
+                    self.showFavoritesOnly = self.settingsViewModel?.defaultFavoritesFilter ?? false
+                    self.masterPasswordInput = ""
+                    self.lockError = false
+                    self.biometricFailed = false
+                    self.setupAutoSave()
+                } catch {
+                    self.biometricFailed = true
+                }
             }
         }
     }
