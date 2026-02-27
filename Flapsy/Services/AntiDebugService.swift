@@ -8,10 +8,12 @@ private func c_ptrace(_ request: CInt, _ pid: pid_t, _ addr: UnsafeMutableRawPoi
 /// Disabled in DEBUG to allow normal Xcode development.
 enum AntiDebugService {
 
-    /// Call once at app launch to deny debugger attachment.
+    /// Call once at app launch to deny future debugger attachment.
+    /// Only activates if a debugger is not currently attached,
+    /// to avoid killing the process on launch from Terminal.
     static func denyDebuggerAttachment() {
         #if !DEBUG
-        // PT_DENY_ATTACH prevents future debugger attachment via ptrace.
+        guard !isDebuggerAttached else { return }
         let PT_DENY_ATTACH: CInt = 31
         _ = c_ptrace(PT_DENY_ATTACH, 0, nil, 0)
         #endif
