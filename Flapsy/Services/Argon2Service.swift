@@ -1,4 +1,7 @@
 import Foundation
+import os.log
+
+private let logger = Logger(subsystem: "com.knox.app", category: "Argon2")
 
 /// Swift wrapper around the Argon2id reference C implementation.
 /// Parameters: 128 MB memory, 3 iterations, 4 lanes (exceeds OWASP recommendations).
@@ -11,7 +14,13 @@ final class Argon2Service {
     let parallelism: UInt32 = 4         // 4 lanes
     let hashLength: Int = 32            // 256-bit output
 
-    private init() {}
+    private init() {
+        // Runtime sanity check: verify parameters are within safe bounds
+        assert(memoryCostKB >= 65_536, "Argon2 memory cost must be at least 64 MB")
+        assert(timeCost >= 1, "Argon2 time cost must be at least 1")
+        assert(parallelism >= 1 && parallelism <= 16, "Argon2 parallelism must be 1-16")
+        assert(hashLength == 32, "Argon2 hash length must be 32 bytes (256-bit)")
+    }
 
     // MARK: - Key Derivation
 
@@ -45,7 +54,11 @@ final class Argon2Service {
             }
         }
 
-        guard result == ARGON2_OK.rawValue else { return nil }
+        if result != ARGON2_OK.rawValue {
+            logger.error("Argon2id failed with code \(result, privacy: .public)")
+            output.resetBytes(in: 0..<output.count)
+            return nil
+        }
         return output
     }
 

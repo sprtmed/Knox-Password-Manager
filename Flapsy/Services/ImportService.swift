@@ -70,10 +70,20 @@ final class ImportService {
 
     // MARK: - Import
 
+    /// Maximum import file size (256 MB). Prevents OOM on malicious or corrupt files.
+    private static let maxImportFileSize: UInt64 = 256 * 1024 * 1024
+
     /// Auto-detects format and parses items from the file at `url`.
     /// For .knox backups, `password` must be provided to decrypt.
     /// Optional `progress` callback reports status strings (called from background thread).
     func importFromFile(_ url: URL, password: String? = nil, progress: ((String) -> Void)? = nil) throws -> ImportResult {
+        // Check file size before loading into memory
+        let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
+        let fileSize = attrs[.size] as? UInt64 ?? 0
+        guard fileSize <= Self.maxImportFileSize else {
+            throw ImportError.parseError("File is too large (\(fileSize / 1_048_576) MB, max 256 MB)")
+        }
+
         let ext = url.pathExtension.lowercased()
 
         if ext == "knox" || ext == "flapsy" {
@@ -394,10 +404,21 @@ final class ImportService {
     // MARK: - Knox Backup (.knox)
 
     /// Knox backup format:
+    ///
+    /// Version 1 (legacy):
     ///   4 bytes: magic "FLPY"
-    ///   4 bytes: version (UInt32 big-endian, currently 1)
+    ///   4 bytes: version (UInt32 big-endian, 1)
     ///   32 bytes: salt
     ///   remaining: AES-256-GCM encrypted VaultData JSON
+    ///   Key: Argon2id(password, salt)
+    ///
+    /// Version 2:
+    ///   4 bytes: magic "FLPY"
+    ///   4 bytes: version (UInt32 big-endian, 2)
+    ///   32 bytes: salt
+    ///   16 bytes: backup Secret Key
+    ///   remaining: AES-256-GCM encrypted VaultData JSON
+    ///   Key: Argon2id(password, salt) → HKDF-SHA256(ikm, secretKey)
     private func importKnoxBackup(_ url: URL, password: String) throws -> ImportResult {
         let data = try Data(contentsOf: url)
         guard data.count > 40 else { throw ImportError.parseError("File too small") }
@@ -408,24 +429,41 @@ final class ImportService {
 
         // Read version
         let version = data[4..<8].withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
-        guard version == 1 else { throw ImportError.parseError("Unsupported backup version \(version)") }
 
-        // Read salt
-        let salt = data[8..<40]
+        let key: SymmetricKey
+        let encrypted: Data
 
-        // Encrypted payload
-        let encrypted = data[40...]
+        switch version {
+        case 1:
+            // Legacy: Argon2id only
+            let salt = Data(data[8..<40])
+            encrypted = Data(data[40...])
+            guard let derivedKey = deriveKeyStandalone(from: password, salt: salt) else {
+                throw ImportError.decryptionFailed
+            }
+            key = derivedKey
 
-        // Derive key from the export password
-        let encryption = EncryptionService.shared
-        guard let key = deriveKeyStandalone(from: password, salt: Data(salt)) else {
-            throw ImportError.decryptionFailed
+        case 2:
+            // V2: Argon2id + HKDF with embedded Secret Key
+            guard data.count > 56 else { throw ImportError.parseError("File too small for v2 backup") }
+            let salt = Data(data[8..<40])
+            let backupSecretKey = Data(data[40..<56])
+            encrypted = Data(data[56...])
+            guard let derivedKey = EncryptionService.deriveKeyV2Standalone(
+                from: password, salt: salt, secretKey: backupSecretKey
+            ) else {
+                throw ImportError.decryptionFailed
+            }
+            key = derivedKey
+
+        default:
+            throw ImportError.parseError("Unsupported backup version \(version)")
         }
 
         // Decrypt
         let decrypted: Data
         do {
-            decrypted = try encryption.decrypt(Data(encrypted), using: key)
+            decrypted = try EncryptionService.shared.decrypt(encrypted, using: key)
         } catch {
             throw ImportError.decryptionFailed
         }

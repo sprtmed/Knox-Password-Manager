@@ -54,13 +54,7 @@ final class GeneratorViewModel: ObservableObject {
         PasswordStrength.calculate(generatedPassword)
     }
 
-    private static let wordList = [
-        "alpha","brave","coral","delta","eagle","flame","grace","haven","ivory","jewel",
-        "karma","lunar","maple","noble","ocean","pearl","quest","river","solar","tiger",
-        "unity","vivid","whale","xenon","youth","zephyr","amber","blaze","cedar","drift",
-        "ember","frost","glyph","haze","index","jazz","knack","lemon","mirth","nexus",
-        "opal","plume","quirk","ridge","sage","torch","ultra","valor","wren","axiom","brisk"
-    ]
+    private static let wordList = EFFWordList.words
 
     func generate() {
         isGenerating = true

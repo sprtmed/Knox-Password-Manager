@@ -1,11 +1,14 @@
 import Foundation
 import CryptoKit
 import CommonCrypto
+import os.log
+
+private let logger = Logger(subsystem: "com.knox.app", category: "Encryption")
 
 /// Vault key derivation version.
 enum VaultKeyVersion: UInt32 {
     case v1 = 1  // PBKDF2-SHA256 (600K iterations), no Secret Key
-    case v2 = 2  // Argon2id (64MB/3/4) + HKDF-SHA256 with Secret Key
+    case v2 = 2  // Argon2id (128MB/3/4) + HKDF-SHA256 with Secret Key
 }
 
 /// Handles AES-256-GCM encryption/decryption of the vault.
@@ -249,7 +252,9 @@ final class EncryptionService {
     private func lockMemory() {
         _derivedKeyData?.withUnsafeBytes { buf in
             if let ptr = buf.baseAddress {
-                mlock(ptr, buf.count)
+                if mlock(ptr, buf.count) != 0 {
+                    logger.warning("mlock failed (errno \(errno, privacy: .public)) — key may be swapped to disk")
+                }
             }
         }
     }
@@ -258,7 +263,9 @@ final class EncryptionService {
     private func unlockMemory() {
         _derivedKeyData?.withUnsafeBytes { buf in
             if let ptr = buf.baseAddress {
-                munlock(ptr, buf.count)
+                if munlock(ptr, buf.count) != 0 {
+                    logger.warning("munlock failed (errno \(errno, privacy: .public))")
+                }
             }
         }
     }
@@ -270,8 +277,7 @@ final class EncryptionService {
         var bytes = [UInt8](repeating: 0, count: byteCount)
         let status = SecRandomCopyBytes(kSecRandomDefault, byteCount, &bytes)
         guard status == errSecSuccess else {
-            for i in 0..<byteCount { bytes[i] = UInt8.random(in: 0...255) }
-            return Data(bytes)
+            fatalError("SecRandomCopyBytes failed with status \(status) — cannot generate cryptographically secure salt")
         }
         return Data(bytes)
     }

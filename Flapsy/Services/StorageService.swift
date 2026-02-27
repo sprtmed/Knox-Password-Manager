@@ -1,5 +1,8 @@
 import Foundation
 import CryptoKit
+import os.log
+
+private let logger = Logger(subsystem: "com.knox.app", category: "Storage")
 
 /// Manages reading/writing the encrypted vault file to disk.
 /// File location: ~/Library/Application Support/Knox/
@@ -179,7 +182,11 @@ final class StorageService {
 
     /// Sets file permissions to 0600 (owner read/write only).
     private func setOwnerOnly(_ url: URL) {
-        try? fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        do {
+            try fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        } catch {
+            logger.warning("Failed to set 0600 on \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     // MARK: - High-Level: Create New Vault (always v2)
@@ -319,7 +326,7 @@ final class StorageService {
 
     func saveVault(_ vault: VaultData) throws {
         let encrypted = try encryption.encryptVault(vault)
-        let salt = (try? readSalt()) ?? Data(repeating: 0, count: 32)
+        let salt = try readSalt()
         let version = readVaultVersion()
         try writeEncryptedVaultData(encrypted, salt: salt, version: version)
     }

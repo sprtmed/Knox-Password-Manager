@@ -150,7 +150,7 @@ struct GeneratorView: View {
         sliderRow(
             label: "Characters",
             value: $generator.characterCount,
-            range: 8...50,
+            range: 12...50,
             step: 1,
             displayValue: "\(Int(generator.characterCount))"
         )

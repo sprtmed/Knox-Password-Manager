@@ -49,4 +49,16 @@ final class ClipboardService {
         clearTimer?.invalidate()
         clearTimer = nil
     }
+
+    /// Clears the clipboard immediately if it still holds content we placed,
+    /// and cancels any pending auto-clear timer.
+    func forceClearIfOwned() {
+        clearTimer?.invalidate()
+        clearTimer = nil
+        let pasteboard = NSPasteboard.general
+        if pasteboard.changeCount == lastChangeCount && lastChangeCount != 0 {
+            pasteboard.clearContents()
+        }
+        lastChangeCount = 0
+    }
 }

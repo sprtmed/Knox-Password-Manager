@@ -56,21 +56,27 @@ final class ExportService {
 
     // MARK: - Export Encrypted Backup
 
-    /// Creates an encrypted .knox backup file.
+    /// Creates an encrypted .knox backup file using the full HKDF key chain.
     ///
-    /// Format:
+    /// Version 2 format:
     ///   4 bytes: magic "FLPY"
-    ///   4 bytes: version (UInt32 big-endian, currently 1)
+    ///   4 bytes: version (UInt32 big-endian, 2)
     ///   32 bytes: salt
+    ///   16 bytes: backup-specific Secret Key
     ///   remaining: AES-256-GCM encrypted VaultData JSON
+    ///
+    /// Key derivation: Argon2id(password, salt) → HKDF-SHA256(ikm, secretKey) → AES key
     func exportEncryptedBackup(vault: VaultData, password: String, to url: URL) throws {
         guard !vault.items.isEmpty else { throw ExportError.noItems }
 
-        // Generate a fresh salt for this backup
+        // Generate a fresh salt and backup-specific Secret Key
         let salt = EncryptionService.shared.generateSalt(byteCount: 32)
+        let backupSecretKey = SecretKeyService.shared.generateSecretKey()  // 16 bytes
 
-        // Derive key from the export password
-        guard let key = deriveKeyStandalone(from: password, salt: salt) else {
+        // Derive key using the full v2 chain (Argon2id + HKDF)
+        guard let key = EncryptionService.deriveKeyV2Standalone(
+            from: password, salt: salt, secretKey: backupSecretKey
+        ) else {
             throw ExportError.encryptionFailed
         }
 
@@ -82,14 +88,15 @@ final class ExportService {
         // Encrypt
         let encrypted = try EncryptionService.shared.encrypt(json, using: key)
 
-        // Build file: magic + version + salt + encrypted
+        // Build file: magic + version + salt + secretKey + encrypted
         var fileData = Data()
         fileData.append("FLPY".data(using: .ascii)!)  // 4 bytes magic
 
-        var version = UInt32(1).bigEndian
+        var version = UInt32(2).bigEndian
         fileData.append(Data(bytes: &version, count: 4))  // 4 bytes version
 
         fileData.append(salt)  // 32 bytes salt
+        fileData.append(backupSecretKey)  // 16 bytes secret key
         fileData.append(encrypted)  // encrypted payload
 
         try fileData.write(to: url, options: [.atomic, .completeFileProtection])
@@ -130,19 +137,16 @@ final class ExportService {
     // MARK: - Helpers
 
     private func escapeCSVField(_ value: String) -> String {
-        if value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r") {
-            return "\"" + value.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+        var field = value
+        // Neutralize formula injection: prefix with single quote if field starts
+        // with a character that spreadsheet apps interpret as a formula trigger.
+        if let first = field.first, "=+\\-@|".contains(first) {
+            field = "'" + field
         }
-        return value
+        if field.contains(",") || field.contains("\"") || field.contains("\n") || field.contains("\r") {
+            return "\"" + field.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+        }
+        return field
     }
 
-    /// Standalone key derivation using Argon2id (doesn't store the key in EncryptionService).
-    private func deriveKeyStandalone(from password: String, salt: Data) -> SymmetricKey? {
-        guard var derivedBytes = Argon2Service.shared.deriveKey(from: password, salt: salt) else {
-            return nil
-        }
-        let key = SymmetricKey(data: derivedBytes)
-        derivedBytes.resetBytes(in: 0..<derivedBytes.count)
-        return key
-    }
 }

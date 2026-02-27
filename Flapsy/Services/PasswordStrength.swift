@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct PasswordStrength {
+    /// Minimum strength score required for vault creation and password changes.
+    static let minimumRequired = 50
+
     static func calculate(_ password: String) -> Int {
         guard !password.isEmpty else { return 0 }
         var score = 0

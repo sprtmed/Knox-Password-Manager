@@ -211,6 +211,7 @@ struct SetupView: View {
     private var canCreate: Bool {
         !vault.setupPassword.isEmpty &&
         vault.setupPassword.count >= 12 &&
+        vault.setupPasswordStrength >= PasswordStrength.minimumRequired &&
         vault.setupPassword == vault.setupConfirm
     }
 }

@@ -403,6 +403,10 @@ final class VaultViewModel: ObservableObject {
             setupError = "Password must be at least 12 characters"
             return
         }
+        guard PasswordStrength.calculate(password) >= PasswordStrength.minimumRequired else {
+            setupError = "Password is too weak — use a mix of upper/lowercase, numbers, and symbols"
+            return
+        }
         guard password == confirm else {
             setupError = "Passwords do not match"
             return
@@ -667,6 +671,32 @@ final class VaultViewModel: ObservableObject {
         items = []
         categories = []
         masterPasswordInput = ""
+
+        // Clear sensitive add-new fields
+        newPassword = ""
+        newCardNumber = ""
+        newCvv = ""
+        newCardNotes = ""
+        newNoteText = ""
+
+        // Clear sensitive edit fields
+        editPassword = ""
+        editCardNumber = ""
+        editCvv = ""
+        editCardNotes = ""
+        editNoteText = ""
+        isEditingItem = false
+
+        // Clear sensitive export/change-password fields
+        exportPasswordInput = ""
+        exportPasswordConfirm = ""
+        csvExportMasterPassword = ""
+        changeOldPassword = ""
+        changeNewPassword = ""
+        changeConfirmPassword = ""
+
+        // Clear clipboard if it still holds a copied secret
+        ClipboardService.shared.forceClearIfOwned()
 
         autoSaveDebounce?.cancel()
         autoSaveDebounce = nil
@@ -1275,6 +1305,10 @@ final class VaultViewModel: ObservableObject {
             changePasswordError = "New password must be at least 12 characters"
             return
         }
+        guard PasswordStrength.calculate(newPw) >= PasswordStrength.minimumRequired else {
+            changePasswordError = "Password is too weak — use a mix of upper/lowercase, numbers, and symbols"
+            return
+        }
         guard newPw == confirmPw else {
             changePasswordError = "Passwords do not match"
             return
@@ -1336,11 +1370,16 @@ final class VaultViewModel: ObservableObject {
                 let vault = VaultData(items: self.items, categories: self.categories, settings: settings)
                 try self.storage.saveVault(vault)
 
-                // Update biometric key if enabled
+                // Always invalidate old biometric key on password change.
+                // If biometric is enabled, re-store with the new derived key.
+                // If disabled, just delete the stale key so re-enabling later
+                // won't use an outdated key.
                 if self.settingsViewModel?.biometricEnabled == true,
                    var keyData = self.encryption.currentKeyData {
                     KeychainService.shared.storeDerivedKey(keyData)
                     keyData.resetBytes(in: 0..<keyData.count)
+                } else {
+                    KeychainService.shared.deleteDerivedKey()
                 }
 
                 DispatchQueue.main.async {
