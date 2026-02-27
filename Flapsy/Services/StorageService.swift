@@ -28,6 +28,16 @@ final class StorageService {
         appSupportDirectory.appendingPathComponent("salt.dat")
     }
 
+    var vaultBackupURL: URL {
+        appSupportDirectory.appendingPathComponent("vault.enc.bak")
+    }
+
+    /// True if vault.enc exists on disk (regardless of salt or Keychain state).
+    /// Use this to decide whether to show setup vs lock screen.
+    var vaultFileExists: Bool {
+        fileManager.fileExists(atPath: vaultFileURL.path)
+    }
+
     /// True if the vault can be unlocked: vault.enc exists and salt is available
     /// (either from salt.dat or from the embedded vault header).
     var vaultExists: Bool {
@@ -152,7 +162,16 @@ final class StorageService {
         return fileData
     }
 
+    /// Copies vault.enc → vault.enc.bak (single rolling backup).
+    func backupVaultFile() {
+        guard fileManager.fileExists(atPath: vaultFileURL.path) else { return }
+        try? fileManager.removeItem(at: vaultBackupURL)
+        try? fileManager.copyItem(at: vaultFileURL, to: vaultBackupURL)
+        setOwnerOnly(vaultBackupURL)
+    }
+
     func writeEncryptedVaultData(_ data: Data, salt: Data, version: VaultKeyVersion = .v2) throws {
+        backupVaultFile()
         let fileData = buildVaultFile(encrypted: data, salt: salt, version: version)
         try fileData.write(to: vaultFileURL, options: [.atomic, .completeFileProtection])
         setOwnerOnly(vaultFileURL)
@@ -313,8 +332,21 @@ final class StorageService {
 
     // MARK: - Delete Vault (full reset)
 
-    /// Removes ALL vault data: encrypted file, salt, Secret Key, biometric key, and biometric flag.
+    /// Removes ALL vault data: encrypted file, salt, backup, Secret Key, biometric key, and biometric flag.
     func deleteVaultFiles() {
+        try? fileManager.removeItem(at: vaultFileURL)
+        try? fileManager.removeItem(at: saltFileURL)
+        try? fileManager.removeItem(at: vaultBackupURL)
+        SecretKeyService.shared.deleteSecretKey()
+        KeychainService.shared.deleteDerivedKey()
+        KeychainService.biometricEnabledFlag = false
+        encryption.wipeKey()
+    }
+
+    /// Backs up the vault, then removes vault/salt/keys but preserves .bak.
+    /// Used by "Start Fresh" so the user can manually recover the old vault.
+    func deleteVaultFilesKeepingBackup() {
+        backupVaultFile()
         try? fileManager.removeItem(at: vaultFileURL)
         try? fileManager.removeItem(at: saltFileURL)
         SecretKeyService.shared.deleteSecretKey()

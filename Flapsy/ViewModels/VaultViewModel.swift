@@ -166,6 +166,10 @@ final class VaultViewModel: ObservableObject {
     @Published var resetConfirmText: String = ""
     @Published var isResetting: Bool = false
 
+    // MARK: - Start Fresh (lock screen vault overwrite)
+    @Published var showStartFreshConfirmation: Bool = false
+    @Published var startFreshConfirmText: String = ""
+
     // MARK: - Biometric
     @Published var showBiometricPrompt: Bool = false
     @Published var biometricFailed: Bool = false
@@ -196,8 +200,10 @@ final class VaultViewModel: ObservableObject {
     }
 
     /// Determines whether to show lock screen or setup screen.
+    /// Uses vaultFileExists (not vaultExists) so that a lost Keychain/salt
+    /// still shows the lock screen instead of the setup screen.
     func checkFirstLaunch() {
-        if storage.vaultExists {
+        if storage.vaultFileExists {
             currentScreen = .lock
         } else {
             currentScreen = .setup
@@ -378,6 +384,12 @@ final class VaultViewModel: ObservableObject {
     // MARK: - First Launch: Create Master Password (v2 — Argon2id + Secret Key)
 
     func createMasterPassword() {
+        // Safety: refuse to overwrite an existing vault
+        guard !storage.vaultFileExists else {
+            setupError = "A vault already exists. Use \"Start Fresh\" from the lock screen first."
+            return
+        }
+
         let password = setupPassword.trimmingCharacters(in: .whitespaces)
         let confirm = setupConfirm.trimmingCharacters(in: .whitespaces)
         setupPassword = ""
@@ -1211,7 +1223,10 @@ final class VaultViewModel: ObservableObject {
     }
 
     func enableBiometric() {
-        guard var keyData = encryption.currentKeyData else { return }
+        guard var keyData = encryption.currentKeyData else {
+            logger.error("enableBiometric: no derived key available")
+            return
+        }
         let stored = KeychainService.shared.storeDerivedKey(keyData)
         keyData.resetBytes(in: 0..<keyData.count)
         if stored {
@@ -1219,6 +1234,10 @@ final class VaultViewModel: ObservableObject {
             KeychainService.biometricEnabledFlag = true
             showEnableBiometricPrompt = false
             persistVault()
+        } else {
+            logger.error("enableBiometric: Keychain store failed")
+            settingsViewModel?.biometricEnabled = false
+            KeychainService.biometricEnabledFlag = false
         }
     }
 
@@ -1398,6 +1417,55 @@ final class VaultViewModel: ObservableObject {
     func cancelReset() {
         showResetConfirmation = false
         resetConfirmText = ""
+    }
+
+    // MARK: - Start Fresh (from Lock Screen)
+
+    /// Backs up the vault, deletes all vault data, and navigates to setup.
+    func startFresh() {
+        autoSaveDebounce?.cancel()
+        autoSaveDebounce = nil
+
+        // Backup vault then delete (keeps .bak)
+        storage.deleteVaultFilesKeepingBackup()
+
+        // Clear in-memory state
+        items = []
+        categories = []
+        selectedItemID = nil
+        searchText = ""
+        activeCategory = "all"
+        typeFilter = nil
+        showFavoritesOnly = false
+        isUnlocked = false
+        masterPasswordInput = ""
+        lockError = false
+        lockErrorMessage = ""
+        failedAttempts = 0
+        lockoutTimer?.invalidate()
+        lockoutTimer = nil
+        isLockedOut = false
+        lockoutRemainingSeconds = 0
+        needsSecretKeyRecovery = false
+        secretKeyRecoveryInput = ""
+        secretKeyRecoveryError = ""
+
+        settingsViewModel?.resetToDefaults()
+
+        // Reset Start Fresh state
+        showStartFreshConfirmation = false
+        startFreshConfirmText = ""
+
+        // Navigate to setup
+        isOnboarding = true
+        onboardingPasswordCreated = false
+        currentPanel = .list
+        currentScreen = .setup
+    }
+
+    func cancelStartFresh() {
+        showStartFreshConfirmation = false
+        startFreshConfirmText = ""
     }
 }
 

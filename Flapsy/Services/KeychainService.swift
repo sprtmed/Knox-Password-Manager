@@ -1,6 +1,7 @@
 import Foundation
 import Security
 import LocalAuthentication
+import os.log
 
 /// Manages storing/retrieving the vault's derived encryption key in Keychain
 /// with biometric (Touch ID) protection.
@@ -9,6 +10,7 @@ final class KeychainService {
 
     private let service = "com.knox.app"
     private let account = "vault-derived-key"
+    private let log = OSLog(subsystem: "com.knox.app", category: "Keychain")
 
     private init() {}
 
@@ -21,12 +23,17 @@ final class KeychainService {
         // Delete any existing item first
         deleteDerivedKey()
 
+        var acError: Unmanaged<CFError>?
         guard let accessControl = SecAccessControlCreateWithFlags(
             kCFAllocatorDefault,
             kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
             .biometryCurrentSet,
-            nil
-        ) else { return false }
+            &acError
+        ) else {
+            os_log(.error, log: log, "SecAccessControl creation failed: %{public}@",
+                   acError?.takeRetainedValue().localizedDescription ?? "unknown")
+            return false
+        }
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -37,6 +44,9 @@ final class KeychainService {
         ]
 
         let status = SecItemAdd(query as CFDictionary, nil)
+        if status != errSecSuccess {
+            os_log(.error, log: log, "SecItemAdd failed: %{public}d", status)
+        }
         return status == errSecSuccess
     }
 

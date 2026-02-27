@@ -10,6 +10,12 @@ KNOX does one thing and does it well.
 
 ---
 
+## Download
+
+Grab the latest release from the [Releases page](https://github.com/sprtmed/Knox-Password-Manager/releases/latest). Open the DMG, drag Knox to Applications, and launch. Fully notarized — no Gatekeeper warnings.
+
+---
+
 ## Features
 
 - **Menu bar app** — Click the icon or press `Cmd+Shift+P` to open. No dock icon, no window clutter
@@ -21,6 +27,7 @@ KNOX does one thing and does it well.
 - **Import** — Bring your passwords from 1Password, Bitwarden, or any CSV
 - **Export** — Encrypted `.knox` backup or plain CSV
 - **Dark & light mode** — Follows your preference
+- **Vault overwrite protection** — Automatic backups on every save, Keychain recovery, and "Start Fresh" safety net
 - **Completely free** — No trials, no tiers, no subscriptions. Ever.
 
 ---
@@ -42,6 +49,7 @@ This is a password manager, so security isn't a feature — it's the foundation.
 | **Clipboard** | Marked as concealed (`NSPasteboard.ConcealedType`) + auto-clear timer |
 | **Password requirements** | 12-character minimum with real-time strength scoring |
 | **Storage** | Local only — `~/Library/Application Support/Knox/` |
+| **Vault backup** | Rolling backup (`vault.enc.bak`) created automatically on every save |
 | **Network** | None. Zero. KNOX has no network entitlements and makes no connections. |
 | **Biometrics** | Touch ID via `LAContext` with `.biometryCurrentSet` (invalidates on enrollment change) |
 | **Runtime** | Hardened Runtime enabled |
