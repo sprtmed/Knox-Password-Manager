@@ -1,4 +1,4 @@
-# KNOX
+# KNOX Password Manager
 
 **A no-nonsense password manager for Mac.**
 
