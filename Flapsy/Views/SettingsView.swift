@@ -228,6 +228,18 @@ struct SettingsView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(theme.inputBorder, lineWidth: 1)
                     )
+                } else if SecureEnclaveService.shared.hasWrappedKey {
+                    HStack(spacing: 8) {
+                        Image(systemName: "lock.shield.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(theme.accentGreen)
+                        Text("Protected by Secure Enclave")
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundColor(theme.accentGreen)
+                    }
+                    .padding(10)
+                    .background(theme.accentGreen.opacity(0.08))
+                    .cornerRadius(8)
                 } else {
                     Text("No Secret Key found (v1 vault)")
                         .font(.system(size: 11, design: .monospaced))

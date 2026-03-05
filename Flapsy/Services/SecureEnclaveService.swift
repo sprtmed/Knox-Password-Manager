@@ -198,7 +198,18 @@ final class SecureEnclaveService {
         do {
             let wrapped = try wrapSecretKey(plainKey)
             guard storeWrappedKey(wrapped) else { return false }
-            // Remove the plain key — it's now protected by SE
+            // Verify we can unwrap before deleting plain key
+            guard let unwrapped = try? unwrapSecretKey(wrapped), unwrapped == plainKey else {
+                // Unwrap failed — keep plain key, remove broken wrapped key
+                let deleteQuery: [String: Any] = [
+                    kSecClass as String: kSecClassGenericPassword,
+                    kSecAttrService as String: service,
+                    kSecAttrAccount as String: wrappedAccount
+                ]
+                SecItemDelete(deleteQuery as CFDictionary)
+                return false
+            }
+            // SE wrap verified — safe to remove the plain key
             SecretKeyService.shared.deletePlainKey()
             return true
         } catch {
