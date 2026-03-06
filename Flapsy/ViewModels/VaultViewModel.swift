@@ -340,6 +340,11 @@ final class VaultViewModel: ObservableObject {
         let dupGroups = dupGrouped.values.filter { $0.count >= 2 }.sorted { $0.count > $1.count }
         let dupIDs = Set<UUID>(dupGroups.flatMap { $0.map(\.id) })
 
+        // Remove deleted items from breach results
+        let activeIDs = Set(currentItems.map(\.id))
+        compromisedItemIDs = compromisedItemIDs.intersection(activeIDs)
+        breachOccurrences = breachOccurrences.filter { activeIDs.contains($0.key) }
+
         let flagged = weak.union(reusedIDs).union(dupIDs).union(compromisedItemIDs)
 
         let logins = currentItems.filter { $0.type == .login }

@@ -122,7 +122,7 @@ struct VaultHealthView: View {
                 .font(.system(size: 13, weight: .semibold, design: .monospaced))
                 .foregroundColor(scoreColor)
 
-            let loginCount = vault.items.filter { $0.type == .login }.count
+            let loginCount = vault.activeItems.filter { $0.type == .login }.count
             Text("\(loginCount) login\(loginCount == 1 ? "" : "s") analyzed")
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundColor(theme.textFaint)
@@ -256,7 +256,7 @@ struct VaultHealthView: View {
         VStack(alignment: .leading, spacing: 10) {
             FormLabel("COMPROMISED PASSWORDS")
 
-            let compromisedItems = vault.items.filter { vault.compromisedItemIDs.contains($0.id) }
+            let compromisedItems = vault.activeItems.filter { vault.compromisedItemIDs.contains($0.id) }
             VStack(spacing: 4) {
                 ForEach(compromisedItems) { item in
                     Button(action: { selectItem(item.id) }) {
@@ -385,7 +385,7 @@ struct VaultHealthView: View {
         VStack(alignment: .leading, spacing: 10) {
             FormLabel("WEAK PASSWORDS")
 
-            let weakItems = vault.items.filter { vault.weakPasswordItemIDs.contains($0.id) }
+            let weakItems = vault.activeItems.filter { vault.weakPasswordItemIDs.contains($0.id) }
             VStack(spacing: 4) {
                 ForEach(weakItems) { item in
                     Button(action: { selectItem(item.id) }) {
