@@ -27,6 +27,7 @@ final class SettingsViewModel: ObservableObject {
     }
     @Published var keepWindowOpen: Bool = false
     @Published var openURLCopyPassword: Bool = false
+    @Published var breachCheckEnabled: Bool = false
     @Published var lastBackupDate: Date? = nil
 
     // Runtime-only: current pin state for this session (not persisted)
@@ -66,6 +67,7 @@ final class SettingsViewModel: ObservableObject {
         keepWindowOpen = settings.keepWindowOpen
         isWindowPinned = settings.keepWindowOpen
         openURLCopyPassword = settings.openURLCopyPassword
+        breachCheckEnabled = settings.breachCheckEnabled
         lastBackupDate = settings.lastBackupDate
     }
 
@@ -85,6 +87,7 @@ final class SettingsViewModel: ObservableObject {
         keepWindowOpen = false
         isWindowPinned = false
         openURLCopyPassword = false
+        breachCheckEnabled = false
         // lastBackupDate intentionally not reset
     }
 
@@ -104,6 +107,7 @@ final class SettingsViewModel: ObservableObject {
             checkForUpdates: checkForUpdates,
             keepWindowOpen: keepWindowOpen,
             openURLCopyPassword: openURLCopyPassword,
+            breachCheckEnabled: breachCheckEnabled,
             lastBackupDate: lastBackupDate
         )
     }

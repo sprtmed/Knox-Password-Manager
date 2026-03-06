@@ -4,7 +4,7 @@ Items to consider implementing. All aligned with local-only, no-cloud, no-extens
 
 ## Security
 
-- [ ] **Breach Detection (HIBP k-Anonymity)** — Check passwords against Have I Been Pwned using k-anonymity API (sends only first 5 chars of SHA-1 prefix). Upgrade Health panel from weak/reused to weak/reused/compromised. Optional, user-togglable in settings.
+- [x] **Breach Detection (HIBP k-Anonymity)** — Check passwords against Have I Been Pwned using k-anonymity API (sends only first 5 chars of SHA-1 prefix). Upgrade Health panel from weak/reused to weak/reused/compromised. Optional, user-togglable in settings.
 
 - [ ] **Password Change Re-authentication** — Require master password re-entry (or Touch ID) before allowing password change. Prevents unauthorized change if vault is left unlocked.
 

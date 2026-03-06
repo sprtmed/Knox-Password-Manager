@@ -2,6 +2,7 @@ import SwiftUI
 
     enum HealthFilter: String, CaseIterable {
         case all = "All"
+        case compromised = "Breached"
         case reused = "Reused"
         case weak = "Weak"
         case duplicates = "Duplicates"
@@ -20,6 +21,15 @@ struct VaultHealthView: View {
 
                     if !vault.flaggedItemIDs.isEmpty {
                         filterBar
+                    }
+
+                    // Breach check status / results
+                    if vault.isCheckingBreaches {
+                        breachCheckingCard
+                    }
+
+                    if showSection(.compromised) && !vault.compromisedItemIDs.isEmpty {
+                        compromisedSection
                     }
 
                     if showSection(.reused) && !vault.reusedPasswordGroups.isEmpty {
@@ -116,6 +126,12 @@ struct VaultHealthView: View {
             Text("\(loginCount) login\(loginCount == 1 ? "" : "s") analyzed")
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundColor(theme.textFaint)
+
+            if !vault.compromisedItemIDs.isEmpty {
+                Text("\(vault.compromisedItemIDs.count) compromised")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundColor(theme.accentRed)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
@@ -186,6 +202,7 @@ struct VaultHealthView: View {
     private func filterIcon(for option: HealthFilter) -> String {
         switch option {
         case .all: return ""
+        case .compromised: return "exclamationmark.shield.fill"
         case .reused: return "arrow.triangle.2.circlepath"
         case .weak: return "exclamationmark.triangle.fill"
         case .duplicates: return "doc.on.doc.fill"
@@ -195,6 +212,7 @@ struct VaultHealthView: View {
     private func filterColor(for option: HealthFilter) -> Color {
         switch option {
         case .all: return theme.accentBlueLt
+        case .compromised: return theme.accentRed
         case .reused: return theme.accentRed
         case .weak: return theme.accentYellow
         case .duplicates: return theme.accentYellow
@@ -204,10 +222,98 @@ struct VaultHealthView: View {
     private func filterCount(for option: HealthFilter) -> Int {
         switch option {
         case .all: return vault.flaggedItemIDs.count
+        case .compromised: return vault.compromisedItemIDs.count
         case .reused: return vault.reusedPasswordItemIDs.count
         case .weak: return vault.weakPasswordItemIDs.count
         case .duplicates: return vault.duplicateLoginItemIDs.count
         }
+    }
+
+    // MARK: - Breach Checking Card
+
+    private var breachCheckingCard: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+                .controlSize(.small)
+                .tint(theme.accentBlueLt)
+            Text("Checking passwords against breach database\u{2026}")
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundColor(theme.textSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(theme.accentBlue.opacity(0.06))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(theme.accentBlue.opacity(0.15), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Compromised Passwords Section
+
+    private var compromisedSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            FormLabel("COMPROMISED PASSWORDS")
+
+            let compromisedItems = vault.items.filter { vault.compromisedItemIDs.contains($0.id) }
+            VStack(spacing: 4) {
+                ForEach(compromisedItems) { item in
+                    Button(action: { selectItem(item.id) }) {
+                        HStack(spacing: 8) {
+                            itemIcon(for: item)
+                                .frame(width: 24, height: 24)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(item.name)
+                                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                    .foregroundColor(theme.text)
+                                    .lineLimit(1)
+                                Text(item.subtitle)
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundColor(theme.textFaint)
+                                    .lineLimit(1)
+                            }
+                            Spacer()
+                            if let count = vault.breachOccurrences[item.id] {
+                                Text("\(formatBreachCount(count))x")
+                                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                                    .foregroundColor(theme.accentRed)
+                            }
+                            Text("\u{203A}")
+                                .font(.system(size: 14))
+                                .foregroundColor(theme.textGhost)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(theme.fieldBg)
+                        .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(12)
+            .background(theme.accentRed.opacity(0.04))
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(theme.accentRed.opacity(0.25), lineWidth: 1)
+            )
+
+            HStack(spacing: 4) {
+                Image(systemName: "lock.shield")
+                    .font(.system(size: 9))
+                    .foregroundColor(theme.textGhost)
+                Text("Only SHA-1 prefixes (5 chars) are sent \u{2014} full passwords never leave your device.")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(theme.textGhost)
+            }
+        }
+    }
+
+    private func formatBreachCount(_ count: Int) -> String {
+        if count >= 1_000_000 { return "\(count / 1_000_000)M" }
+        if count >= 1_000 { return "\(count / 1_000)K" }
+        return "\(count)"
     }
 
     // MARK: - Reused / Duplicate Section

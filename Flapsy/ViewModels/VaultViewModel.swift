@@ -307,6 +307,14 @@ final class VaultViewModel: ObservableObject {
     @Published var healthScore: Int = 100
     private var healthDebounce: AnyCancellable?
 
+    // Breach detection (HIBP)
+    @Published var compromisedItemIDs: Set<UUID> = []
+    @Published var breachOccurrences: [UUID: Int] = [:]  // itemID -> breach count
+    @Published var isCheckingBreaches: Bool = false
+    @Published var breachCheckError: String = ""
+    @Published var lastBreachCheckDate: Date? = nil
+    private var breachCheckTask: Task<Void, Never>?
+
     func recomputeHealth() {
         let currentItems = activeItems
 
@@ -332,15 +340,26 @@ final class VaultViewModel: ObservableObject {
         let dupGroups = dupGrouped.values.filter { $0.count >= 2 }.sorted { $0.count > $1.count }
         let dupIDs = Set<UUID>(dupGroups.flatMap { $0.map(\.id) })
 
-        let flagged = weak.union(reusedIDs).union(dupIDs)
+        let flagged = weak.union(reusedIDs).union(dupIDs).union(compromisedItemIDs)
 
         let logins = currentItems.filter { $0.type == .login }
         let score: Int
         if logins.isEmpty {
             score = 100
         } else {
-            let flaggedCount = logins.filter { flagged.contains($0.id) }.count
-            score = Int(round(Double(logins.count - flaggedCount) / Double(logins.count) * 100))
+            // Compromised passwords get double penalty weight
+            var penalty = 0.0
+            for login in logins {
+                if compromisedItemIDs.contains(login.id) {
+                    penalty += 2.0  // severe: known breach
+                } else if weak.contains(login.id) || reusedIDs.contains(login.id) {
+                    penalty += 1.0
+                } else if dupIDs.contains(login.id) {
+                    penalty += 0.5
+                }
+            }
+            let rawScore = max(0, Double(logins.count) - penalty) / Double(logins.count) * 100
+            score = Int(round(rawScore))
         }
 
         weakPasswordItemIDs = weak
@@ -360,6 +379,36 @@ final class VaultViewModel: ObservableObject {
                 self?.recomputeHealth()
             }
         recomputeHealth()
+    }
+
+    /// Check all vault passwords against HIBP breach database.
+    /// Only runs if the user has opted in via Settings.
+    func runBreachCheck() {
+        guard settingsViewModel?.breachCheckEnabled == true else { return }
+
+        breachCheckTask?.cancel()
+        breachCheckTask = Task { @MainActor in
+            isCheckingBreaches = true
+            breachCheckError = ""
+
+            let loginItems = activeItems.compactMap { item -> (id: UUID, password: String)? in
+                guard item.type == .login, let pw = item.password, !pw.isEmpty else { return nil }
+                return (id: item.id, password: pw)
+            }
+
+            let results = await HIBPService.checkVault(items: loginItems)
+
+            guard !Task.isCancelled else {
+                isCheckingBreaches = false
+                return
+            }
+
+            compromisedItemIDs = Set(results.map(\.itemID))
+            breachOccurrences = Dictionary(uniqueKeysWithValues: results.map { ($0.itemID, $0.occurrences) })
+            lastBreachCheckDate = Date()
+            isCheckingBreaches = false
+            recomputeHealth()
+        }
     }
 
     func navigateToItem(_ id: UUID) {
@@ -726,6 +775,12 @@ final class VaultViewModel: ObservableObject {
         autoSaveDebounce = nil
         healthDebounce?.cancel()
         healthDebounce = nil
+        breachCheckTask?.cancel()
+        breachCheckTask = nil
+        compromisedItemIDs = []
+        breachOccurrences = [:]
+        isCheckingBreaches = false
+        lastBreachCheckDate = nil
     }
 
     // MARK: - Persist Vault (encrypt & write to disk)
@@ -759,6 +814,7 @@ final class VaultViewModel: ObservableObject {
         setupHealthMonitor()
         purgeExpiredTrash()
         SecretKeyService.shared.migrateToSecureEnclaveIfNeeded()
+        runBreachCheck()
     }
 
     // MARK: - CRUD Actions

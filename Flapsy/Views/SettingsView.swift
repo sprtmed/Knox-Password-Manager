@@ -18,6 +18,7 @@ struct SettingsView: View {
                 favoritesDefaultSection
                 deleteConfirmSection
                 updateCheckSection
+                breachCheckSection
                 secretKeySection
                 changePasswordSection
                 backupReminder
@@ -183,6 +184,38 @@ struct SettingsView: View {
                     .foregroundColor(theme.textFaint)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
+        }
+    }
+
+    // MARK: - Breach Check
+
+    private var breachCheckSection: some View {
+        VStack(spacing: 4) {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.shield.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(theme.accentRed)
+                    Text("Breach Detection")
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(theme.text)
+                }
+                Spacer()
+                FlapsyToggle(isOn: Binding(
+                    get: { settings.breachCheckEnabled },
+                    set: { newValue in
+                        settings.breachCheckEnabled = newValue
+                        if newValue {
+                            vault.runBreachCheck()
+                        }
+                    }
+                ))
+            }
+            .padding(.vertical, 4)
+            Text("Checks passwords against Have I Been Pwned on unlock. Only 5-char SHA-1 prefixes are sent \u{2014} full passwords never leave your device.")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundColor(theme.textFaint)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -677,7 +710,8 @@ struct SettingsView: View {
                 securityRow("Clipboard", value: "Concealed + auto-clear")
                 securityRow("Min password", value: "12 characters")
                 securityRow("Storage", value: "Local only")
-                securityRow("Network", value: settings.checkForUpdates ? "Update check only" : "None")
+                securityRow("Breach check", value: settings.breachCheckEnabled ? "HIBP k-Anonymity" : "Disabled")
+                securityRow("Network", value: (settings.checkForUpdates || settings.breachCheckEnabled) ? "Update check + HIBP prefixes" : settings.checkForUpdates ? "Update check only" : "None")
                 securityRow("Biometrics", value: "Touch ID")
             }
         }
