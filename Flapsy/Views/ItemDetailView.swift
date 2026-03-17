@@ -319,6 +319,21 @@ struct ItemDetailView: View {
         }
         FormLabel("2FA SECRET (OPTIONAL)")
         FormTextField(placeholder: "Paste base32 key or otpauth:// URI", text: $vault.editTotpSecret)
+        VStack(alignment: .leading, spacing: 5) {
+            FormLabel("NOTES (OPTIONAL)")
+            TextEditor(text: $vault.editLoginNotes)
+                .font(.system(size: 13, design: .monospaced))
+                .foregroundColor(theme.text)
+                .scrollContentBackground(.hidden)
+                .padding(6)
+                .frame(minHeight: 50)
+                .background(theme.inputBg)
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(theme.inputBorder, lineWidth: 1)
+                )
+        }
     }
 
     // MARK: - Card Edit Fields
@@ -546,6 +561,23 @@ struct ItemDetailView: View {
             if let history = item.previousPasswords, !history.isEmpty {
                 PasswordHistorySection(history: history)
             }
+        }
+
+        if let notes = item.loginNotes, !notes.isEmpty {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("NOTES")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(theme.textFaint)
+                    .tracking(1)
+                Text(notes)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundColor(theme.textSecondary)
+                    .lineSpacing(3)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(theme.fieldBg)
+            .cornerRadius(8)
         }
     }
 
@@ -914,7 +946,7 @@ struct MarkdownTextView: View {
         while let range = plain.range(of: queryLower, range: searchStart..<plain.endIndex) {
             let attrStart = attributed.index(attributed.startIndex, offsetByCharacters: plain.distance(from: plain.startIndex, to: range.lowerBound))
             let attrEnd = attributed.index(attrStart, offsetByCharacters: plain.distance(from: range.lowerBound, to: range.upperBound))
-            attributed[attrStart..<attrEnd].backgroundColor = theme.accentGreen.opacity(0.3)
+            attributed[attrStart..<attrEnd].backgroundColor = theme.accentGreen.opacity(0.5)
             attributed[attrStart..<attrEnd].foregroundColor = theme.text
             searchStart = range.upperBound
         }
@@ -1047,7 +1079,7 @@ private struct SelectableTextRepresentable: NSViewRepresentable {
                 let nsText = (text as NSString).lowercased as NSString
                 let query = (highlightText as NSString).lowercased as NSString
                 var searchRange = NSRange(location: 0, length: nsText.length)
-                let highlightColor = NSColor.systemGreen.withAlphaComponent(0.3)
+                let highlightColor = NSColor(red: 0.2, green: 0.83, blue: 0.6, alpha: 0.5)
                 while searchRange.location < nsText.length {
                     let found = nsText.range(of: query as String, options: [], range: searchRange)
                     guard found.location != NSNotFound else { break }

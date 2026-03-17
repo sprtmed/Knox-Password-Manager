@@ -119,7 +119,7 @@ final class ExportService {
                 escapeCSVField(item.cardNumber ?? ""),
                 escapeCSVField(item.expiry ?? ""),
                 escapeCSVField(item.cvv ?? ""),
-                escapeCSVField(item.noteText ?? ""),
+                escapeCSVField(item.noteText ?? item.loginNotes ?? item.cardNotes ?? ""),
                 escapeCSVField(item.category),
                 item.isFavorite ? "1" : "0",
                 ISO8601DateFormatter().string(from: item.createdAt),

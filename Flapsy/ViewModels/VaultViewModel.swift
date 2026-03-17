@@ -119,6 +119,7 @@ final class VaultViewModel: ObservableObject {
     @Published var newCardNotes: String = ""
     @Published var newNoteText: String = ""
     @Published var newTotpSecret: String = ""
+    @Published var newLoginNotes: String = ""
 
     // MARK: - Edit Item
     @Published var isEditingItem: Bool = false
@@ -135,6 +136,7 @@ final class VaultViewModel: ObservableObject {
     @Published var editCardNotes: String = ""
     @Published var editNoteText: String = ""
     @Published var editTotpSecret: String = ""
+    @Published var editLoginNotes: String = ""
     @Published var showEditPassword: Bool = false
 
     // MARK: - Category Manager
@@ -257,7 +259,7 @@ final class VaultViewModel: ObservableObject {
             let query = searchText.lowercased()
             let nameLower = item.name.lowercased()
             let userLower = (item.username ?? "").lowercased()
-            let noteLower = (item.noteText ?? "").lowercased()
+            let noteLower = (item.noteText ?? item.loginNotes ?? "").lowercased()
 
             // Substring matches on name, username & noteText — always include, ranked highest
             let nameContains = nameLower.contains(query)
@@ -300,7 +302,7 @@ final class VaultViewModel: ObservableObject {
     var canSaveNewItem: Bool {
         guard !newName.isEmpty else { return false }
         switch newType {
-        case .login: return !newUsername.isEmpty && !newPassword.isEmpty
+        case .login: return !newUrl.isEmpty
         case .card: return !newCardNumber.isEmpty
         case .note: return !newNoteText.isEmpty
         }
@@ -765,6 +767,7 @@ final class VaultViewModel: ObservableObject {
         newCardNotes = ""
         newNoteText = ""
         newTotpSecret = ""
+        newLoginNotes = ""
 
         // Clear sensitive edit fields
         editPassword = ""
@@ -773,6 +776,7 @@ final class VaultViewModel: ObservableObject {
         editCardNotes = ""
         editNoteText = ""
         editTotpSecret = ""
+        editLoginNotes = ""
         isEditingItem = false
 
         // Clear re-auth state
@@ -867,7 +871,8 @@ final class VaultViewModel: ObservableObject {
         switch newType {
         case .login:
             let totp = TOTPService.extractSecret(from: newTotpSecret)
-            item = .newLogin(name: newName, url: newUrl, username: newUsername, password: newPassword, category: newCategory, totpSecret: totp)
+            let notes = newLoginNotes.isEmpty ? nil : newLoginNotes
+            item = .newLogin(name: newName, url: newUrl, username: newUsername, password: newPassword, category: newCategory, totpSecret: totp, loginNotes: notes)
         case .card:
             item = .newCard(name: newName, cardType: newCardType, cardHolder: newCardHolder, cardNumber: newCardNumber, expiry: newExpiry, cvv: newCvv, cardNotes: newCardNotes, category: newCategory)
         case .note:
@@ -900,6 +905,7 @@ final class VaultViewModel: ObservableObject {
         newCardNotes = ""
         newNoteText = ""
         newTotpSecret = ""
+        newLoginNotes = ""
     }
 
     func navigateToPanel(_ panel: VaultPanel) {
@@ -997,6 +1003,7 @@ final class VaultViewModel: ObservableObject {
         editCardNotes = item.cardNotes ?? ""
         editNoteText = item.noteText ?? ""
         editTotpSecret = item.totpSecret ?? ""
+        editLoginNotes = item.loginNotes ?? ""
         showEditPassword = false
         isEditingItem = true
     }
@@ -1022,9 +1029,10 @@ final class VaultViewModel: ObservableObject {
                 items[idx].previousPasswords = history
             }
             items[idx].url = editUrl
-            items[idx].username = editUsername
-            items[idx].password = editPassword
+            items[idx].username = editUsername.isEmpty ? nil : editUsername
+            items[idx].password = editPassword.isEmpty ? nil : editPassword
             items[idx].totpSecret = TOTPService.extractSecret(from: editTotpSecret)
+            items[idx].loginNotes = editLoginNotes.isEmpty ? nil : editLoginNotes
         case .card:
             items[idx].cardType = editCardType.isEmpty ? nil : editCardType
             items[idx].cardHolder = editCardHolder

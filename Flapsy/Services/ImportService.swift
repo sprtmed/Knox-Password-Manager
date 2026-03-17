@@ -232,7 +232,8 @@ final class ImportService {
             url: url,
             username: username,
             password: password,
-            category: "personal"
+            category: "personal",
+            loginNotes: notes.isEmpty ? nil : notes
         )
     }
 
@@ -279,7 +280,8 @@ final class ImportService {
             url: loginUrl,
             username: loginUser,
             password: loginPass,
-            category: "personal"
+            category: "personal",
+            loginNotes: notes.isEmpty ? nil : notes
         )
     }
 
@@ -336,7 +338,8 @@ final class ImportService {
             url: url,
             username: username,
             password: password,
-            category: "personal"
+            category: "personal",
+            loginNotes: notes.isEmpty ? nil : notes
         )
     }
 
@@ -393,7 +396,8 @@ final class ImportService {
                     url: uri,
                     username: login?["username"] as? String ?? "",
                     password: login?["password"] as? String ?? "",
-                    category: "personal"
+                    category: "personal",
+                    loginNotes: notes.isEmpty ? nil : notes
                 ))
             }
         }

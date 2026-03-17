@@ -205,6 +205,22 @@ struct AddItemView: View {
             FormTextField(placeholder: "Paste base32 key or otpauth:// URI", text: $vault.newTotpSecret)
         }
 
+        VStack(alignment: .leading, spacing: 5) {
+            FormLabel("NOTES (OPTIONAL)")
+            TextEditor(text: $vault.newLoginNotes)
+                .font(.system(size: 13, design: .monospaced))
+                .foregroundColor(theme.text)
+                .scrollContentBackground(.hidden)
+                .padding(6)
+                .frame(minHeight: 50)
+                .background(theme.inputBg)
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(theme.inputBorder, lineWidth: 1)
+                )
+        }
+
             // Strength bar
             if !vault.newPassword.isEmpty {
                 let strength = vault.newPasswordStrength

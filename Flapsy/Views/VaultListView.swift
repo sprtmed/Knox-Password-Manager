@@ -59,6 +59,16 @@ struct VaultListView: View {
                     .focused($isSearchFieldFocused)
             }
             .padding(10)
+
+            if !vault.searchText.isEmpty {
+                Button(action: { vault.searchText = "" }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(theme.textSecondary)
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 10)
+            }
         }
         .background(theme.inputBg)
         .cornerRadius(8)
