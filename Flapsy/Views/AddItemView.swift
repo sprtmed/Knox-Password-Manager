@@ -2,18 +2,44 @@ import SwiftUI
 
 struct AddItemView: View {
     @EnvironmentObject var vault: VaultViewModel
+    @EnvironmentObject var settings: SettingsViewModel
     @Environment(\.theme) var theme
+    @State private var showExpandedNote = false
 
     var body: some View {
-        ScrollView {
-            if vault.newSaved {
-                savedConfirmation
-            } else {
-                addForm
+        if showExpandedNote {
+            expandedNoteSubpage
+        } else {
+            ScrollView {
+                if vault.newSaved {
+                    savedConfirmation
+                } else {
+                    addForm
+                }
             }
+            .padding(16)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
         }
-        .padding(16)
-        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    private var expandedNoteSubpage: some View {
+        ExpandedNoteView(
+            text: expandedNoteBinding,
+            title: vault.newType == .note ? "SECURE NOTE" : "NOTES",
+            onDismiss: {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    showExpandedNote = false
+                }
+            }
+        )
+    }
+
+    private var expandedNoteBinding: Binding<String> {
+        switch vault.newType {
+        case .login: return $vault.newLoginNotes
+        case .card: return $vault.newCardNotes
+        case .note: return $vault.newNoteText
+        }
     }
 
     // MARK: - Saved Confirmation
@@ -206,7 +232,15 @@ struct AddItemView: View {
         }
 
         VStack(alignment: .leading, spacing: 5) {
-            FormLabel("NOTES (OPTIONAL)")
+            HStack {
+                FormLabel("NOTES (OPTIONAL)")
+                Spacer()
+                NoteExpandButton {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        showExpandedNote = true
+                    }
+                }
+            }
             TextEditor(text: $vault.newLoginNotes)
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundColor(theme.text)
@@ -219,6 +253,9 @@ struct AddItemView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(theme.inputBorder, lineWidth: 1)
                 )
+        }
+        .onAppear {
+            if settings.alwaysExpandNotes { showExpandedNote = true }
         }
 
             // Strength bar
@@ -313,7 +350,15 @@ struct AddItemView: View {
             }
         }
         VStack(alignment: .leading, spacing: 5) {
-            FormLabel("NOTES (OPTIONAL)")
+            HStack {
+                FormLabel("NOTES (OPTIONAL)")
+                Spacer()
+                NoteExpandButton {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        showExpandedNote = true
+                    }
+                }
+            }
             TextEditor(text: $vault.newCardNotes)
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundColor(theme.text)
@@ -327,6 +372,9 @@ struct AddItemView: View {
                         .stroke(theme.inputBorder, lineWidth: 1)
                 )
         }
+        .onAppear {
+            if settings.alwaysExpandNotes { showExpandedNote = true }
+        }
     }
 
     // MARK: - Note Fields
@@ -334,7 +382,15 @@ struct AddItemView: View {
     @ViewBuilder
     private var noteFields: some View {
         VStack(alignment: .leading, spacing: 5) {
-            FormLabel("SECURE NOTE")
+            HStack {
+                FormLabel("SECURE NOTE")
+                Spacer()
+                NoteExpandButton {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        showExpandedNote = true
+                    }
+                }
+            }
             TextEditor(text: $vault.newNoteText)
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundColor(theme.text)
@@ -347,6 +403,9 @@ struct AddItemView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(theme.inputBorder, lineWidth: 1)
                 )
+        }
+        .onAppear {
+            if settings.alwaysExpandNotes { showExpandedNote = true }
         }
     }
 

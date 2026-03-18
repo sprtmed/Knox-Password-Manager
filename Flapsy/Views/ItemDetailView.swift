@@ -6,6 +6,7 @@ struct ItemDetailView: View {
     @Environment(\.theme) var theme
     @State private var showDeleteConfirmation = false
     @State private var showMarkdownPreview = true
+    @State private var showExpandedNote = false
 
     private func dismissDetail() {
         withAnimation(.easeInOut(duration: 0.15)) {
@@ -25,6 +26,10 @@ struct ItemDetailView: View {
                 detailView(item)
             }
         }
+        EmptyView()
+            .onChange(of: vault.isEditingItem) { editing in
+                if !editing { showExpandedNote = false }
+            }
     }
 
     // MARK: - Detail View (read-only)
@@ -137,9 +142,29 @@ struct ItemDetailView: View {
         }
     }
 
+    private func expandedNoteBinding(for item: VaultItem) -> Binding<String> {
+        switch item.type {
+        case .login: return $vault.editLoginNotes
+        case .card: return $vault.editCardNotes
+        case .note: return $vault.editNoteText
+        }
+    }
+
     // MARK: - Edit View
 
     private func editView(_ item: VaultItem) -> some View {
+        Group {
+        if showExpandedNote {
+            ExpandedNoteView(
+                text: expandedNoteBinding(for: item),
+                title: item.type == .note ? "SECURE NOTE" : "NOTES",
+                onDismiss: {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        showExpandedNote = false
+                    }
+                }
+            )
+        } else {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 // Name
@@ -257,6 +282,8 @@ struct ItemDetailView: View {
         }
         .frame(maxHeight: 320)
         .transition(.move(edge: .bottom).combined(with: .opacity))
+        } // else
+        } // Group
     }
 
     // MARK: - Login Edit Fields
@@ -320,7 +347,15 @@ struct ItemDetailView: View {
         FormLabel("2FA SECRET (OPTIONAL)")
         FormTextField(placeholder: "Paste base32 key or otpauth:// URI", text: $vault.editTotpSecret)
         VStack(alignment: .leading, spacing: 5) {
-            FormLabel("NOTES (OPTIONAL)")
+            HStack {
+                FormLabel("NOTES (OPTIONAL)")
+                Spacer()
+                NoteExpandButton {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        showExpandedNote = true
+                    }
+                }
+            }
             TextEditor(text: $vault.editLoginNotes)
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundColor(theme.text)
@@ -333,6 +368,9 @@ struct ItemDetailView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(theme.inputBorder, lineWidth: 1)
                 )
+        }
+        .onAppear {
+            if settings.alwaysExpandNotes { showExpandedNote = true }
         }
     }
 
@@ -381,7 +419,15 @@ struct ItemDetailView: View {
             }
         }
         VStack(alignment: .leading, spacing: 5) {
-            FormLabel("NOTES (OPTIONAL)")
+            HStack {
+                FormLabel("NOTES (OPTIONAL)")
+                Spacer()
+                NoteExpandButton {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        showExpandedNote = true
+                    }
+                }
+            }
             TextEditor(text: $vault.editCardNotes)
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundColor(theme.text)
@@ -395,13 +441,24 @@ struct ItemDetailView: View {
                         .stroke(theme.inputBorder, lineWidth: 1)
                 )
         }
+        .onAppear {
+            if settings.alwaysExpandNotes { showExpandedNote = true }
+        }
     }
 
     // MARK: - Note Edit Fields
 
     @ViewBuilder
     private var noteEditFields: some View {
-        FormLabel("SECURE NOTE")
+        HStack {
+            FormLabel("SECURE NOTE")
+            Spacer()
+            NoteExpandButton {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    showExpandedNote = true
+                }
+            }
+        }
         TextEditor(text: $vault.editNoteText)
             .font(.system(size: 13, design: .monospaced))
             .foregroundColor(theme.text)
@@ -414,6 +471,9 @@ struct ItemDetailView: View {
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(theme.inputBorder, lineWidth: 1)
             )
+            .onAppear {
+                if settings.alwaysExpandNotes { showExpandedNote = true }
+            }
     }
 
     // MARK: - Type Icon

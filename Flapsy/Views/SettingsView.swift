@@ -16,6 +16,7 @@ struct SettingsView: View {
                 clipboardSection
                 openURLCopySection
                 favoritesDefaultSection
+                expandNotesSection
                 deleteConfirmSection
                 updateCheckSection
                 breachCheckSection
@@ -525,6 +526,30 @@ struct SettingsView: View {
             FlapsyToggle(isOn: $settings.defaultFavoritesFilter)
         }
         .padding(.vertical, 4)
+    }
+
+    // MARK: - Always Expand Notes
+
+    private var expandNotesSection: some View {
+        VStack(spacing: 4) {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 14))
+                        .foregroundColor(theme.accentBlueLt)
+                    Text("Always Expand Notes")
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(theme.text)
+                }
+                Spacer()
+                FlapsyToggle(isOn: $settings.alwaysExpandNotes)
+            }
+            .padding(.vertical, 4)
+            Text("Notes always open in full-height expanded view.")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundColor(theme.textFaint)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 
     // MARK: - Delete Confirmation

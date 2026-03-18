@@ -30,6 +30,7 @@ struct VaultSettings: Codable {
     var keepWindowOpen: Bool
     var openURLCopyPassword: Bool
     var breachCheckEnabled: Bool
+    var alwaysExpandNotes: Bool
     var lastBackupDate: Date?
 
     static var defaults: VaultSettings {
@@ -48,7 +49,8 @@ struct VaultSettings: Codable {
             checkForUpdates: true,
             keepWindowOpen: false,
             openURLCopyPassword: false,
-            breachCheckEnabled: false
+            breachCheckEnabled: false,
+            alwaysExpandNotes: false
         )
     }
 
@@ -70,6 +72,7 @@ struct VaultSettings: Codable {
         keepWindowOpen = try container.decodeIfPresent(Bool.self, forKey: .keepWindowOpen) ?? false
         openURLCopyPassword = try container.decodeIfPresent(Bool.self, forKey: .openURLCopyPassword) ?? false
         breachCheckEnabled = try container.decodeIfPresent(Bool.self, forKey: .breachCheckEnabled) ?? false
+        alwaysExpandNotes = try container.decodeIfPresent(Bool.self, forKey: .alwaysExpandNotes) ?? false
         lastBackupDate = try container.decodeIfPresent(Date.self, forKey: .lastBackupDate)
     }
 
@@ -83,6 +86,7 @@ struct VaultSettings: Codable {
          keepWindowOpen: Bool = false,
          openURLCopyPassword: Bool = false,
          breachCheckEnabled: Bool = false,
+         alwaysExpandNotes: Bool = false,
          lastBackupDate: Date? = nil) {
         self.menuBarIcon = menuBarIcon
         self.menuBarShowLabel = menuBarShowLabel
@@ -99,6 +103,7 @@ struct VaultSettings: Codable {
         self.keepWindowOpen = keepWindowOpen
         self.openURLCopyPassword = openURLCopyPassword
         self.breachCheckEnabled = breachCheckEnabled
+        self.alwaysExpandNotes = alwaysExpandNotes
         self.lastBackupDate = lastBackupDate
     }
 }
