@@ -7,6 +7,7 @@ struct ItemDetailView: View {
     @State private var showDeleteConfirmation = false
     @State private var showMarkdownPreview = true
     @State private var showExpandedNote = false
+    @State private var expandedNoteAutoOpened = false
 
     private func dismissDetail() {
         withAnimation(.easeInOut(duration: 0.15)) {
@@ -22,14 +23,44 @@ struct ItemDetailView: View {
         if let item = vault.selectedItem {
             if vault.isEditingItem {
                 editView(item)
+            } else if showExpandedNote {
+                readOnlyExpandedNote(item)
             } else {
                 detailView(item)
             }
         }
         EmptyView()
             .onChange(of: vault.isEditingItem) { editing in
-                if !editing { showExpandedNote = false }
+                if !editing {
+                    showExpandedNote = false
+                    expandedNoteAutoOpened = false
+                }
             }
+            .onChange(of: vault.selectedItemID) { _ in
+                showExpandedNote = false
+            }
+    }
+
+    @ViewBuilder
+    private func readOnlyExpandedNote(_ item: VaultItem) -> some View {
+        let noteText: String = {
+            switch item.type {
+            case .login: return item.loginNotes ?? ""
+            case .card: return item.cardNotes ?? ""
+            case .note: return item.noteText ?? ""
+            }
+        }()
+        ExpandedNoteView(
+            text: .constant(noteText),
+            title: item.type == .note ? "SECURE NOTE" : "NOTES",
+            readOnly: true,
+            onDismiss: {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    showExpandedNote = false
+                }
+            }
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Detail View (read-only)
@@ -152,8 +183,8 @@ struct ItemDetailView: View {
 
     // MARK: - Edit View
 
+    @ViewBuilder
     private func editView(_ item: VaultItem) -> some View {
-        Group {
         if showExpandedNote {
             ExpandedNoteView(
                 text: expandedNoteBinding(for: item),
@@ -164,126 +195,126 @@ struct ItemDetailView: View {
                     }
                 }
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .transition(.move(edge: .trailing).combined(with: .opacity))
         } else {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                // Name
-                FormLabel("NAME")
-                FormTextField(placeholder: "Item name\u{2026}", text: $vault.editName)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    // Name
+                    FormLabel("NAME")
+                    FormTextField(placeholder: "Item name\u{2026}", text: $vault.editName)
 
-                // Type-specific fields
-                switch item.type {
-                case .login:
-                    loginEditFields
-                case .card:
-                    cardEditFields
-                case .note:
-                    noteEditFields
-                }
+                    // Type-specific fields
+                    switch item.type {
+                    case .login:
+                        loginEditFields
+                    case .card:
+                        cardEditFields
+                    case .note:
+                        noteEditFields
+                    }
 
-                // Category picker
-                if !vault.categories.isEmpty {
-                    VStack(alignment: .leading, spacing: 5) {
-                        FormLabel("CATEGORY")
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 4) {
-                                ForEach(vault.categories) { cat in
-                                    Button(action: { vault.editCategory = cat.key }) {
-                                        HStack(spacing: 5) {
-                                            Circle()
-                                                .fill(Color(hex: cat.color))
-                                                .frame(width: 8, height: 8)
-                                            Text(cat.label)
-                                                .font(.system(size: 12, design: .monospaced))
-                                                .foregroundColor(vault.editCategory == cat.key ? theme.accentBlueLt : theme.textMuted)
+                    // Category picker
+                    if !vault.categories.isEmpty {
+                        VStack(alignment: .leading, spacing: 5) {
+                            FormLabel("CATEGORY")
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 4) {
+                                    ForEach(vault.categories) { cat in
+                                        Button(action: { vault.editCategory = cat.key }) {
+                                            HStack(spacing: 5) {
+                                                Circle()
+                                                    .fill(Color(hex: cat.color))
+                                                    .frame(width: 8, height: 8)
+                                                Text(cat.label)
+                                                    .font(.system(size: 12, design: .monospaced))
+                                                    .foregroundColor(vault.editCategory == cat.key ? theme.accentBlueLt : theme.textMuted)
+                                            }
+                                            .padding(.horizontal, 14)
+                                            .padding(.vertical, 6)
+                                            .background(vault.editCategory == cat.key ? theme.pillBg : Color.clear)
+                                            .cornerRadius(20)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 20)
+                                                    .stroke(
+                                                        vault.editCategory == cat.key ? theme.accentBlue.opacity(0.27) : theme.inputBorder,
+                                                        lineWidth: 1
+                                                    )
+                                            )
                                         }
-                                        .padding(.horizontal, 14)
-                                        .padding(.vertical, 6)
-                                        .background(vault.editCategory == cat.key ? theme.pillBg : Color.clear)
-                                        .cornerRadius(20)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 20)
-                                                .stroke(
-                                                    vault.editCategory == cat.key ? theme.accentBlue.opacity(0.27) : theme.inputBorder,
-                                                    lineWidth: 1
-                                                )
-                                        )
+                                        .buttonStyle(.plain)
                                     }
-                                    .buttonStyle(.plain)
                                 }
                             }
                         }
                     }
-                }
 
-                // Action buttons
-                HStack(spacing: 8) {
-                    Button(action: { vault.saveEditedItem() }) {
-                        Text("Save")
-                            .font(.system(size: 12, weight: .semibold, design: .monospaced))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 8)
-                            .background(
-                                LinearGradient(
-                                    colors: [Color(hex: "3b82f6"), Color(hex: "2563eb")],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                    // Action buttons
+                    HStack(spacing: 8) {
+                        Button(action: { vault.saveEditedItem() }) {
+                            Text("Save")
+                                .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 8)
+                                .background(
+                                    LinearGradient(
+                                        colors: [Color(hex: "3b82f6"), Color(hex: "2563eb")],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
                                 )
-                            )
-                            .cornerRadius(8)
-                    }
-                    .buttonStyle(.plain)
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
 
-                    Button(action: { vault.cancelEditing() }) {
-                        Text("Cancel")
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(theme.textSecondary)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(theme.fieldBg)
-                            .cornerRadius(8)
-                    }
-                    .buttonStyle(.plain)
+                        Button(action: { vault.cancelEditing() }) {
+                            Text("Cancel")
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundColor(theme.textSecondary)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(theme.fieldBg)
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
 
-                    Spacer()
+                        Spacer()
 
-                    Button(action: {
-                        vault.deleteItem(item.id)
-                        vault.isEditingItem = false
-                    }) {
-                        Text("\u{2715} Delete")
-                            .font(.system(size: 11, design: .monospaced))
-                            .foregroundColor(theme.accentRed)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(theme.fieldBg)
-                            .cornerRadius(8)
+                        Button(action: {
+                            vault.deleteItem(item.id)
+                            vault.isEditingItem = false
+                        }) {
+                            Text("\u{2715} Delete")
+                                .font(.system(size: 11, design: .monospaced))
+                                .foregroundColor(theme.accentRed)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(theme.fieldBg)
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
+                    .padding(.top, 4)
                 }
-                .padding(.top, 4)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-        }
-        .overlay(alignment: .top) {
-            VStack(spacing: 0) {
-                Rectangle()
-                    .fill(theme.cardBorder)
-                    .frame(height: 1)
-                LinearGradient(
-                    colors: [Color.black.opacity(0.12), Color.black.opacity(0)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 8)
+            .overlay(alignment: .top) {
+                VStack(spacing: 0) {
+                    Rectangle()
+                        .fill(theme.cardBorder)
+                        .frame(height: 1)
+                    LinearGradient(
+                        colors: [Color.black.opacity(0.12), Color.black.opacity(0)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 8)
+                }
             }
+            .transition(.move(edge: .bottom).combined(with: .opacity))
         }
-        .frame(maxHeight: 320)
-        .transition(.move(edge: .bottom).combined(with: .opacity))
-        } // else
-        } // Group
     }
 
     // MARK: - Login Edit Fields
@@ -370,7 +401,10 @@ struct ItemDetailView: View {
                 )
         }
         .onAppear {
-            if settings.alwaysExpandNotes { showExpandedNote = true }
+            if settings.alwaysExpandNotes && !expandedNoteAutoOpened {
+                expandedNoteAutoOpened = true
+                showExpandedNote = true
+            }
         }
     }
 
@@ -442,7 +476,10 @@ struct ItemDetailView: View {
                 )
         }
         .onAppear {
-            if settings.alwaysExpandNotes { showExpandedNote = true }
+            if settings.alwaysExpandNotes && !expandedNoteAutoOpened {
+                expandedNoteAutoOpened = true
+                showExpandedNote = true
+            }
         }
     }
 
@@ -472,7 +509,10 @@ struct ItemDetailView: View {
                     .stroke(theme.inputBorder, lineWidth: 1)
             )
             .onAppear {
-                if settings.alwaysExpandNotes { showExpandedNote = true }
+                if settings.alwaysExpandNotes && !expandedNoteAutoOpened {
+                    expandedNoteAutoOpened = true
+                    showExpandedNote = true
+                }
             }
     }
 
@@ -625,10 +665,18 @@ struct ItemDetailView: View {
 
         if let notes = item.loginNotes, !notes.isEmpty {
             VStack(alignment: .leading, spacing: 2) {
-                Text("NOTES")
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(theme.textFaint)
-                    .tracking(1)
+                HStack {
+                    Text("NOTES")
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(theme.textFaint)
+                        .tracking(1)
+                    Spacer()
+                    NoteExpandButton {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            showExpandedNote = true
+                        }
+                    }
+                }
                 Text(notes)
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundColor(theme.textSecondary)
@@ -740,10 +788,18 @@ struct ItemDetailView: View {
 
         if let notes = item.cardNotes, !notes.isEmpty {
             VStack(alignment: .leading, spacing: 2) {
-                Text("NOTES")
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(theme.textFaint)
-                    .tracking(1)
+                HStack {
+                    Text("NOTES")
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(theme.textFaint)
+                        .tracking(1)
+                    Spacer()
+                    NoteExpandButton {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            showExpandedNote = true
+                        }
+                    }
+                }
                 Text(notes)
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundColor(theme.textSecondary)
@@ -767,6 +823,11 @@ struct ItemDetailView: View {
                     .foregroundColor(theme.textFaint)
                     .tracking(1)
                 Spacer()
+                NoteExpandButton {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        showExpandedNote = true
+                    }
+                }
                 Button(action: { showMarkdownPreview.toggle() }) {
                     HStack(spacing: 4) {
                         Image(systemName: showMarkdownPreview ? "doc.richtext" : "doc.plaintext")

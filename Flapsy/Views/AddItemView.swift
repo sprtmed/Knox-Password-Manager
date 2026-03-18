@@ -5,10 +5,12 @@ struct AddItemView: View {
     @EnvironmentObject var settings: SettingsViewModel
     @Environment(\.theme) var theme
     @State private var showExpandedNote = false
+    @State private var expandedNoteAutoOpened = false
 
     var body: some View {
         if showExpandedNote {
             expandedNoteSubpage
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ScrollView {
                 if vault.newSaved {
@@ -255,7 +257,10 @@ struct AddItemView: View {
                 )
         }
         .onAppear {
-            if settings.alwaysExpandNotes { showExpandedNote = true }
+            if settings.alwaysExpandNotes && !expandedNoteAutoOpened {
+                expandedNoteAutoOpened = true
+                showExpandedNote = true
+            }
         }
 
             // Strength bar
@@ -373,7 +378,10 @@ struct AddItemView: View {
                 )
         }
         .onAppear {
-            if settings.alwaysExpandNotes { showExpandedNote = true }
+            if settings.alwaysExpandNotes && !expandedNoteAutoOpened {
+                expandedNoteAutoOpened = true
+                showExpandedNote = true
+            }
         }
     }
 
@@ -405,7 +413,10 @@ struct AddItemView: View {
                 )
         }
         .onAppear {
-            if settings.alwaysExpandNotes { showExpandedNote = true }
+            if settings.alwaysExpandNotes && !expandedNoteAutoOpened {
+                expandedNoteAutoOpened = true
+                showExpandedNote = true
+            }
         }
     }
 
