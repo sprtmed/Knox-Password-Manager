@@ -127,13 +127,13 @@ struct ExpandedNoteView: View {
 
                         if let onDelete = onDelete {
                             Button(action: onDelete) {
-                                Text("\u{2715} Delete")
-                                    .font(.system(size: 11, design: .monospaced))
+                                Image(systemName: "trash")
+                                    .font(.system(size: 11))
                                     .foregroundColor(theme.accentRed)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
                                     .background(theme.fieldBg)
-                                    .cornerRadius(8)
+                                    .cornerRadius(6)
                             }
                             .buttonStyle(.plain)
                         }

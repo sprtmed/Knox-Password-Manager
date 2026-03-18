@@ -310,13 +310,13 @@ struct ItemDetailView: View {
                             vault.deleteItem(item.id)
                             vault.isEditingItem = false
                         }) {
-                            Text("\u{2715} Delete")
-                                .font(.system(size: 11, design: .monospaced))
+                            Image(systemName: "trash")
+                                .font(.system(size: 11))
                                 .foregroundColor(theme.accentRed)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
                                 .background(theme.fieldBg)
-                                .cornerRadius(8)
+                                .cornerRadius(6)
                         }
                         .buttonStyle(.plain)
                     }
@@ -426,7 +426,7 @@ struct ItemDetailView: View {
                 )
         }
         .onAppear {
-            if settings.alwaysExpandNotes && !vault.expandedNoteAutoOpened {
+            if settings.alwaysExpandNotes && !vault.expandedNoteAutoOpened && !vault.editLoginNotes.isEmpty {
                 vault.expandedNoteAutoOpened = true
                 vault.showExpandedNote = true
             }
@@ -501,7 +501,7 @@ struct ItemDetailView: View {
                 )
         }
         .onAppear {
-            if settings.alwaysExpandNotes && !vault.expandedNoteAutoOpened {
+            if settings.alwaysExpandNotes && !vault.expandedNoteAutoOpened && !vault.editCardNotes.isEmpty {
                 vault.expandedNoteAutoOpened = true
                 vault.showExpandedNote = true
             }
@@ -534,7 +534,7 @@ struct ItemDetailView: View {
                     .stroke(theme.inputBorder, lineWidth: 1)
             )
             .onAppear {
-                if settings.alwaysExpandNotes && !vault.expandedNoteAutoOpened {
+                if settings.alwaysExpandNotes && !vault.expandedNoteAutoOpened && !vault.editNoteText.isEmpty {
                     vault.expandedNoteAutoOpened = true
                     vault.showExpandedNote = true
                 }

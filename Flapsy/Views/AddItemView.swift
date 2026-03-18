@@ -255,7 +255,7 @@ struct AddItemView: View {
                 )
         }
         .onAppear {
-            if settings.alwaysExpandNotes && !vault.expandedNoteAutoOpened {
+            if settings.alwaysExpandNotes && !vault.expandedNoteAutoOpened && !vault.newLoginNotes.isEmpty {
                 vault.expandedNoteAutoOpened = true
                 vault.showExpandedNote = true
             }
@@ -376,7 +376,7 @@ struct AddItemView: View {
                 )
         }
         .onAppear {
-            if settings.alwaysExpandNotes && !vault.expandedNoteAutoOpened {
+            if settings.alwaysExpandNotes && !vault.expandedNoteAutoOpened && !vault.newCardNotes.isEmpty {
                 vault.expandedNoteAutoOpened = true
                 vault.showExpandedNote = true
             }
@@ -411,7 +411,7 @@ struct AddItemView: View {
                 )
         }
         .onAppear {
-            if settings.alwaysExpandNotes && !vault.expandedNoteAutoOpened {
+            if settings.alwaysExpandNotes && !vault.expandedNoteAutoOpened && !vault.newNoteText.isEmpty {
                 vault.expandedNoteAutoOpened = true
                 vault.showExpandedNote = true
             }
