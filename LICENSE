@@ -1,13 +1,16 @@
 Copyright (c) 2026 Sprout Media Limited. All rights reserved.
 
-This source code is provided for transparency and audit purposes only.
+This source code is made publicly available for transparency and security
+audit purposes only. You may view and read the code in this repository.
 
 You may NOT, without prior written permission from Sprout Media Limited:
 
-- Copy, reproduce, or clone this software or any portion of it
+- Copy, reproduce, or redistribute this software or any portion of it
 - Modify or create derivative works based on this software
-- Distribute, publish, or sublicense this software
-- Use this software or its source code in any commercial or non-commercial product
+- Distribute, publish, sublicense, or sell this software
+- Use this software, its source code, or any portion thereof in any other
+  product, service, or project — whether commercial or non-commercial
+- Claim authorship or ownership of this software or any portion of it
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
