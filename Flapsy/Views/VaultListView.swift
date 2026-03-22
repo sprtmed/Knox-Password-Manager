@@ -35,12 +35,71 @@ struct VaultListView: View {
                 .frame(width: 0, height: 0)
                 .opacity(0)
         }
+        .onKeyPress(.downArrow) { navigateList(direction: 1); return .handled }
+        .onKeyPress(.upArrow) { navigateList(direction: -1); return .handled }
+        .onKeyPress(.return) {
+            if let id = vault.selectedItemID {
+                // Toggle selection off if already selected
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    vault.selectedItemID = nil
+                    vault.showPassword = false
+                    vault.showCardNumber = false
+                    vault.showCVV = false
+                    vault.isEditingItem = false
+                }
+            } else if let first = vault.filteredItems.first {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    selectItem(first.id)
+                }
+            }
+            return .handled
+        }
+        .onKeyPress(.escape) {
+            if vault.selectedItemID != nil {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    vault.selectedItemID = nil
+                    vault.showPassword = false
+                    vault.showCardNumber = false
+                    vault.showCVV = false
+                    vault.isEditingItem = false
+                }
+                return .handled
+            }
+            return .ignored
+        }
         .onChange(of: vault.isSearchFocused) { focused in
             if focused {
                 isSearchFieldFocused = true
                 vault.isSearchFocused = false
             }
         }
+    }
+
+    // MARK: - Keyboard Navigation
+
+    private func navigateList(direction: Int) {
+        let items = vault.filteredItems
+        guard !items.isEmpty else { return }
+
+        guard let currentID = vault.selectedItemID,
+              let idx = items.firstIndex(where: { $0.id == currentID }) else {
+            // Nothing selected — pick first (down) or last (up)
+            let target = direction > 0 ? items.first! : items.last!
+            withAnimation(.easeInOut(duration: 0.15)) { selectItem(target.id) }
+            return
+        }
+
+        let next = idx + direction
+        guard items.indices.contains(next) else { return }
+        withAnimation(.easeInOut(duration: 0.15)) { selectItem(items[next].id) }
+    }
+
+    private func selectItem(_ id: UUID) {
+        vault.selectedItemID = id
+        vault.showPassword = false
+        vault.showCardNumber = false
+        vault.showCVV = false
+        vault.isEditingItem = false
     }
 
     // MARK: - Search Bar
@@ -389,7 +448,7 @@ struct VaultItemRow: View {
     }
 
     private var itemIcon: some View {
-        let catColor = vault.categoryFor(key: item.category)?.color ?? "8b5cf6"
+        let catColor = vault.categoryFor(key: item.category)?.color ?? "10b981"
         let colors = theme.categoryColors(hex: catColor)
         return ZStack {
             RoundedRectangle(cornerRadius: 10)
