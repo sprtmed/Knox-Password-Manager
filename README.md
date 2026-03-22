@@ -168,4 +168,4 @@ Fort Knox. Where the gold is kept. Seemed fitting for a vault.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+Proprietary. Source code is provided for transparency and audit purposes only. See [LICENSE](LICENSE) for details.
