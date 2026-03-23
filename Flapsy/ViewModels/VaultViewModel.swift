@@ -100,7 +100,7 @@ final class VaultViewModel: ObservableObject {
     @Published var typeFilter: ItemType? = nil
     @Published var activeCategory: String = "all"
     @Published var showFavoritesOnly: Bool = false
-    @Published var sortOption: SortOption = .nameAsc
+    @Published var sortOption: SortOption = .newestFirst
 
     // MARK: - Selection
     @Published var selectedItemID: UUID? = nil
@@ -540,6 +540,7 @@ final class VaultViewModel: ObservableObject {
                         self.currentScreen = .vault
                         self.currentPanel = .list
                         self.showFavoritesOnly = self.settingsViewModel?.defaultFavoritesFilter ?? false
+                        self.sortOption = self.settingsViewModel?.defaultSortOption ?? .newestFirst
                     }
                 }
             } catch {

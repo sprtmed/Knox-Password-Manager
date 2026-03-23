@@ -29,6 +29,7 @@ final class SettingsViewModel: ObservableObject {
     @Published var openURLCopyPassword: Bool = false
     @Published var breachCheckEnabled: Bool = false
     @Published var alwaysExpandNotes: Bool = false
+    @Published var defaultSortOption: SortOption = .newestFirst
     @Published var lastBackupDate: Date? = nil
 
     // Runtime-only: current pin state for this session (not persisted)
@@ -70,6 +71,7 @@ final class SettingsViewModel: ObservableObject {
         openURLCopyPassword = settings.openURLCopyPassword
         breachCheckEnabled = settings.breachCheckEnabled
         alwaysExpandNotes = settings.alwaysExpandNotes
+        defaultSortOption = SortOption(rawValue: settings.defaultSortOption) ?? .newestFirst
         lastBackupDate = settings.lastBackupDate
     }
 
@@ -91,6 +93,7 @@ final class SettingsViewModel: ObservableObject {
         openURLCopyPassword = false
         breachCheckEnabled = false
         alwaysExpandNotes = false
+        defaultSortOption = .newestFirst
         // lastBackupDate intentionally not reset
     }
 
@@ -112,6 +115,7 @@ final class SettingsViewModel: ObservableObject {
             openURLCopyPassword: openURLCopyPassword,
             breachCheckEnabled: breachCheckEnabled,
             alwaysExpandNotes: alwaysExpandNotes,
+            defaultSortOption: defaultSortOption.rawValue,
             lastBackupDate: lastBackupDate
         )
     }

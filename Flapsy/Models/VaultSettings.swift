@@ -31,6 +31,7 @@ struct VaultSettings: Codable {
     var openURLCopyPassword: Bool
     var breachCheckEnabled: Bool
     var alwaysExpandNotes: Bool
+    var defaultSortOption: String
     var lastBackupDate: Date?
 
     static var defaults: VaultSettings {
@@ -50,7 +51,8 @@ struct VaultSettings: Codable {
             keepWindowOpen: false,
             openURLCopyPassword: false,
             breachCheckEnabled: false,
-            alwaysExpandNotes: false
+            alwaysExpandNotes: false,
+            defaultSortOption: "Newest"
         )
     }
 
@@ -73,6 +75,7 @@ struct VaultSettings: Codable {
         openURLCopyPassword = try container.decodeIfPresent(Bool.self, forKey: .openURLCopyPassword) ?? false
         breachCheckEnabled = try container.decodeIfPresent(Bool.self, forKey: .breachCheckEnabled) ?? false
         alwaysExpandNotes = try container.decodeIfPresent(Bool.self, forKey: .alwaysExpandNotes) ?? false
+        defaultSortOption = try container.decodeIfPresent(String.self, forKey: .defaultSortOption) ?? "Newest"
         lastBackupDate = try container.decodeIfPresent(Date.self, forKey: .lastBackupDate)
     }
 
@@ -87,6 +90,7 @@ struct VaultSettings: Codable {
          openURLCopyPassword: Bool = false,
          breachCheckEnabled: Bool = false,
          alwaysExpandNotes: Bool = false,
+         defaultSortOption: String = "Newest",
          lastBackupDate: Date? = nil) {
         self.menuBarIcon = menuBarIcon
         self.menuBarShowLabel = menuBarShowLabel
@@ -104,6 +108,7 @@ struct VaultSettings: Codable {
         self.openURLCopyPassword = openURLCopyPassword
         self.breachCheckEnabled = breachCheckEnabled
         self.alwaysExpandNotes = alwaysExpandNotes
+        self.defaultSortOption = defaultSortOption
         self.lastBackupDate = lastBackupDate
     }
 }

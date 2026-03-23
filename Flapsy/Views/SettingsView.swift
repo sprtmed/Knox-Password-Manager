@@ -20,6 +20,7 @@ struct SettingsView: View {
                 clipboardSection
                 openURLCopySection
                 favoritesDefaultSection
+                defaultSortSection
                 expandNotesSection
                 deleteConfirmSection
                 updateCheckSection
@@ -568,6 +569,48 @@ struct SettingsView: View {
             FlapsyToggle(isOn: $settings.defaultFavoritesFilter)
         }
         .padding(.vertical, 4)
+    }
+
+    // MARK: - Default Sort
+
+    private var defaultSortSection: some View {
+        VStack(spacing: 4) {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.up.arrow.down")
+                        .font(.system(size: 14))
+                        .foregroundColor(theme.accentBlueLt)
+                    Text("Default Sort")
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(theme.text)
+                }
+                Spacer()
+            }
+            .padding(.vertical, 4)
+            HStack(spacing: 4) {
+                ForEach(SortOption.allCases, id: \.self) { option in
+                    Button(action: { settings.defaultSortOption = option }) {
+                        Text(option.rawValue)
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundColor(settings.defaultSortOption == option ? theme.accentBlueLt : theme.textMuted)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(settings.defaultSortOption == option ? theme.pillBg : theme.fieldBg)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(settings.defaultSortOption == option ? theme.accentBlue.opacity(0.27) : theme.inputBorder, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            Text("Sort order applied when the vault is unlocked.")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundColor(theme.textFaint)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 2)
+        }
     }
 
     // MARK: - Always Expand Notes
