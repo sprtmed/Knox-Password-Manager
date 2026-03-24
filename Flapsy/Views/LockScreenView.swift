@@ -36,7 +36,7 @@ struct LockScreenView: View {
 
             // Title
             VStack(spacing: 6) {
-                Text("Knox")
+                Text("Flapsy")
                     .font(.system(size: 18, weight: .bold, design: .monospaced))
                     .foregroundColor(theme.text)
                 Text("Enter master password to unlock")
@@ -213,7 +213,7 @@ struct LockScreenView: View {
             // Version info
             if updateCheck.updateAvailable, let version = updateCheck.latestVersion {
                 Button(action: {
-                    if let url = URL(string: "https://github.com/sprtmed/Knox-Password-Manager/releases/latest") {
+                    if let url = URL(string: "https://github.com/sprtmed/Flapsy-Password-Manager/releases/latest") {
                         NSWorkspace.shared.open(url)
                     }
                 }) {

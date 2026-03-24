@@ -1,4 +1,4 @@
-name: Knox
+name: Flapsy
 options:
   bundleIdPrefix: com.knox
   deploymentTarget:
@@ -15,7 +15,7 @@ settings:
     ENABLE_HARDENED_RUNTIME: YES
 
 targets:
-  Knox:
+  Flapsy:
     type: application
     platform: macOS
     deploymentTarget: "14.0"
@@ -29,9 +29,9 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.knox.app
         INFOPLIST_FILE: Flapsy/Info.plist
         CODE_SIGN_ENTITLEMENTS: Flapsy/Flapsy.entitlements
-        PRODUCT_NAME: Knox
-        MARKETING_VERSION: "1.9.9"
-        CURRENT_PROJECT_VERSION: "48"
+        PRODUCT_NAME: Flapsy
+        MARKETING_VERSION: "2.0.0"
+        CURRENT_PROJECT_VERSION: "49"
         SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -55,8 +55,8 @@ targets:
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.utilities
-        NSHumanReadableCopyright: "Copyright © 2026 Knox. All rights reserved."
-        NSFaceIDUsageDescription: "Knox uses Touch ID to quickly unlock your vault."
+        NSHumanReadableCopyright: "Copyright © 2026 Flapsy. All rights reserved."
+        NSFaceIDUsageDescription: "Flapsy uses Touch ID to quickly unlock your vault."
     entitlements:
       path: Flapsy/Flapsy.entitlements
       properties:

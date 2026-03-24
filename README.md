@@ -1,32 +1,32 @@
-# Knox Password Manager
+# Flapsy Password Manager
 
 **A no-nonsense password manager for Mac.**
 
-Knox lives in your menu bar. It stores your passwords locally, encrypted with the same cryptography used by intelligence agencies. No cloud. No subscriptions. No bloat. Just your passwords, locked down tight.
+Flapsy lives in your menu bar. It stores your passwords locally, encrypted with the same cryptography used by intelligence agencies. No cloud. No subscriptions. No bloat. Just your passwords, locked down tight.
 
-We built Knox because we were fed up. Every password manager out there keeps bolting on features nobody asked for — browser extensions that break, cloud sync that leaks, family plans, travel mode, dark web monitoring, "security scores." Meanwhile, the core job — *storing passwords securely* — gets buried under feature creep.
+We built Flapsy because we were fed up. Every password manager out there keeps bolting on features nobody asked for — browser extensions that break, cloud sync that leaks, family plans, travel mode, dark web monitoring, "security scores." Meanwhile, the core job — *storing passwords securely* — gets buried under feature creep.
 
-Knox does one thing and does it well.
+Flapsy does one thing and does it well.
 
 ---
 
 ## 📥 Download
 
-Grab the latest release from the [Releases page](https://github.com/sprtmed/Knox-Password-Manager/releases/latest). Open the DMG, drag Knox to Applications, and launch. Fully notarized — no Gatekeeper warnings.
+Grab the latest release from the [Releases page](https://github.com/sprtmed/Flapsy-Password-Manager/releases/latest). Open the DMG, drag Flapsy to Applications, and launch. Fully notarized — no Gatekeeper warnings.
 
 ---
 
 ## 🚀 Getting Started
 
-1. Launch Knox — it appears as a lock icon in your menu bar (top-right of your screen)
+1. Launch Flapsy — it appears as a lock icon in your menu bar (top-right of your screen)
 2. Create a strong master password (12+ characters, scored in real-time)
-3. Save your **Emergency Kit** — Knox generates a 128-bit secret key displayed as a base32 string. Write it down and store it somewhere safe
+3. Save your **Emergency Kit** — Flapsy generates a 128-bit secret key displayed as a base32 string. Write it down and store it somewhere safe
 4. Optionally enable Touch ID for quick unlocking
 5. Import existing passwords from 1Password, Bitwarden, Chrome, or CSV — or start adding entries manually
 
 > **Your master password cannot be recovered.** There is no "forgot password" option — this is by design. If you lose both your master password and your secret key, your vault is gone forever.
 
-> **Back up regularly.** Use *Export > Encrypted Backup* to create a `.knox` file. Knox will remind you if it's been 30+ days since your last export.
+> **Back up regularly.** Use *Export > Encrypted Backup* to create a `.knox` file. Flapsy will remind you if it's been 30+ days since your last export.
 
 ---
 
@@ -34,7 +34,7 @@ Grab the latest release from the [Releases page](https://github.com/sprtmed/Knox
 
 - **Menu bar app** — Click the icon or press `Cmd+Shift+P` to open. No dock icon, no window clutter
 - **Logins, cards & notes** — Store passwords, credit/debit cards (Visa, Mastercard, Amex, Discover, UnionPay), and secure notes — all encrypted in one vault
-- **TOTP / 2FA** — Add a TOTP secret or `otpauth://` URI to any login and Knox generates live 6-digit codes with a countdown timer. No separate authenticator app needed
+- **TOTP / 2FA** — Add a TOTP secret or `otpauth://` URI to any login and Flapsy generates live 6-digit codes with a countdown timer. No separate authenticator app needed
 - **Fuzzy search** — Search field auto-focuses on open (`Cmd+K` shortcut). Fuzzy matching with score-ranked results and character highlighting
 - **Password generator** — Three modes: random (length 12–50, numbers/symbols toggles), memorable passphrase (EFF wordlist, 2–8 words, custom separator), and PIN (4–12 digits). Real-time strength meter on all modes
 - **Quick copy** — Copy a password straight from the vault list without opening the detail view
@@ -47,15 +47,15 @@ Grab the latest release from the [Releases page](https://github.com/sprtmed/Knox
 - **Touch ID** — Unlock with your fingerprint
 - **Auto-lock** — Locks automatically after inactivity, sleep, or screen lock. Configurable timer (1–30 minutes)
 - **Clipboard auto-clear** — Copied passwords are marked as concealed and automatically cleared after a configurable timer (5–120 seconds)
-- **Import** — Bring your passwords from 1Password, Bitwarden, Chrome, or any generic CSV. Knox encrypted backups (`.knox`) too
+- **Import** — Bring your passwords from 1Password, Bitwarden, Chrome, or any generic CSV. Flapsy encrypted backups (`.knox`) too
 - **Export** — Encrypted `.knox` backup or plain CSV. Backup reminder if you haven't exported in 30+ days
 - **Dark & light mode** — Follows your preference
 - **Menu bar icon picker** — Choose your preferred icon style from the settings
-- **Window pinning** — Pin the Knox popover so it stays open when you click elsewhere
+- **Window pinning** — Pin the Flapsy popover so it stays open when you click elsewhere
 - **Password history** — Tracks the last 20 passwords for each login item with timestamps, so you can roll back if needed
 - **Edit re-authentication** — Requires master password or Touch ID before editing login credentials, preventing unauthorized changes
 - **Vault overwrite protection** — Automatic backups on every save, Keychain recovery, and "Start Fresh" safety net
-- **Secret Key & Emergency Kit** — A 128-bit secret key is generated alongside your master password. Knox displays it as a formatted base32 "Emergency Kit" after vault creation so you can store it safely
+- **Secret Key & Emergency Kit** — A 128-bit secret key is generated alongside your master password. Flapsy displays it as a formatted base32 "Emergency Kit" after vault creation so you can store it safely
 - **Secret Key recovery** — If your Keychain is lost or you move to a new Mac, enter your base32 secret key on the lock screen to regain access
 - **Secure Enclave** — On Apple Silicon, your secret key is wrapped by a hardware-bound key inside the Secure Enclave. Even root cannot extract it. Falls back to Keychain on Intel Macs
 - **Guided onboarding** — A step-by-step first-launch wizard walks you through creating a master password, setting up Touch ID, and importing existing data
@@ -66,7 +66,7 @@ Grab the latest release from the [Releases page](https://github.com/sprtmed/Knox
 
 ## 🔒 Security
 
-This is a password manager, so security isn't a feature — it's the foundation. Here's exactly what Knox uses:
+This is a password manager, so security isn't a feature — it's the foundation. Here's exactly what Flapsy uses:
 
 | Layer | Implementation |
 |-------|---------------|
@@ -113,13 +113,13 @@ Master Password + Salt (32 bytes)
     AES-256-GCM encrypt/decrypt
 ```
 
-Your vault file (`vault.enc`) contains a 40-byte header (`FLPV` magic + version + embedded salt) followed by the AES-256-GCM ciphertext and a 32-byte HMAC-SHA256 integrity tag. The HMAC is computed over the entire file (header + ciphertext) using a separate key derived via HKDF from the vault key. On every unlock, Knox verifies the HMAC before trusting the data — any tampering or corruption is detected immediately.
+Your vault file (`vault.enc`) contains a 40-byte header (`FLPV` magic + version + embedded salt) followed by the AES-256-GCM ciphertext and a 32-byte HMAC-SHA256 integrity tag. The HMAC is computed over the entire file (header + ciphertext) using a separate key derived via HKDF from the vault key. On every unlock, Flapsy verifies the HMAC before trusting the data — any tampering or corruption is detected immediately.
 
 Even if someone steals the file, they need both your master password AND the 128-bit secret key to decrypt it. Brute-forcing that combination is computationally infeasible.
 
-### ⚠️ What Knox can't protect against
+### ⚠️ What Flapsy can't protect against
 
-We believe in transparency. Knox cannot defend against:
+We believe in transparency. Flapsy cannot defend against:
 
 - Malware running as your user (this applies to every password manager)
 - A compromised operating system or kernel
@@ -140,23 +140,23 @@ These are OS-level threats, not application-level ones.
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
 
 ```bash
-git clone https://github.com/sprtmed/Knox-Password-Manager.git
-cd Knox-Password-Manager
+git clone https://github.com/sprtmed/Flapsy-Password-Manager.git
+cd Flapsy-Password-Manager
 
 xcodegen generate
-open Knox.xcodeproj
+open Flapsy.xcodeproj
 # Press Cmd+R in Xcode
 ```
 
-After building, Knox appears in your menu bar — look for the lock icon in the top-right of your screen.
+After building, Flapsy appears in your menu bar — look for the lock icon in the top-right of your screen.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-Knox-Password-Manager/
-├── Flapsy/                     # Main app source (historical name)
+Flapsy-Password-Manager/
+├── Flapsy/                     # Main app source
 │   ├── FlapsyApp.swift         # @main entry point
 │   ├── AppDelegate.swift       # NSStatusItem + NSPopover + hotkey
 │   ├── Models/                 # VaultItem, VaultCategory, VaultData
@@ -191,14 +191,14 @@ Salt is stored separately in `salt.dat` (32 bytes + SHA-256 checksum = 64 bytes)
 
 ## 🆘 Support
 
-- Report bugs: [GitHub Issues](https://github.com/sprtmed/Knox-Password-Manager/issues)
-- Request features: [GitHub Issues](https://github.com/sprtmed/Knox-Password-Manager/issues)
+- Report bugs: [GitHub Issues](https://github.com/sprtmed/Flapsy-Password-Manager/issues)
+- Request features: [GitHub Issues](https://github.com/sprtmed/Flapsy-Password-Manager/issues)
 
 ---
 
-## 🏛️ Why "Knox"
+## 🏛️ Why "Flapsy"
 
-Fort Knox. Where the gold is kept. Seemed fitting for a vault.
+Some things are better left unexplained.
 
 ---
 

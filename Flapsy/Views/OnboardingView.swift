@@ -95,7 +95,7 @@ struct OnboardingView: View {
             }
 
             VStack(spacing: 8) {
-                Text("Welcome to Knox")
+                Text("Welcome to Flapsy")
                     .font(.system(size: 20, weight: .bold, design: .monospaced))
                     .foregroundColor(theme.text)
                 Text("Your passwords, encrypted locally.")

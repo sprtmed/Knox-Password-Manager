@@ -73,7 +73,7 @@ struct ImportPreviewView: View {
 
     private var backupPasswordSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("This is an encrypted Knox backup. Enter the export password to decrypt it.")
+            Text("This is an encrypted Flapsy backup. Enter the export password to decrypt it.")
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(theme.textSecondary)
 

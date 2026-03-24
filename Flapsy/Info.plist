@@ -23,8 +23,8 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Knox uses Touch ID to quickly unlock your vault.</string>
+	<string>Flapsy uses Touch ID to quickly unlock your vault.</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2026 Knox. All rights reserved.</string>
+	<string>Copyright © 2026 Flapsy. All rights reserved.</string>
 </dict>
 </plist>

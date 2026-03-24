@@ -345,7 +345,7 @@ enum EncryptionError: Error, LocalizedError {
         case .saltMissing: return "Salt file is missing"
         case .saltCorrupted: return "Salt file is corrupted — vault cannot be unlocked"
         case .secretKeyMissing: return "Secret Key is missing — use your Emergency Kit to recover"
-        case .unsupportedVaultVersion(let v): return "This vault requires a newer version of Knox (vault version \(v))"
+        case .unsupportedVaultVersion(let v): return "This vault requires a newer version of Flapsy (vault version \(v))"
         case .integrityCheckFailed: return "Vault integrity check failed — file may be corrupted or tampered with"
         }
     }

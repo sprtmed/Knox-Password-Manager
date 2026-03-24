@@ -114,7 +114,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let button = statusItem.button {
             let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .medium)
-            let image = NSImage(systemSymbolName: "lock.shield.fill", accessibilityDescription: "Knox")
+            let image = NSImage(systemSymbolName: "lock.shield.fill", accessibilityDescription: "Flapsy")
             button.image = image?.withSymbolConfiguration(config)
             button.image?.isTemplate = true
             button.imagePosition = .imageLeading
@@ -134,7 +134,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let sfSymbol = option?.sfSymbol ?? "lock.shield.fill"
 
         let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .medium)
-        let image = NSImage(systemSymbolName: sfSymbol, accessibilityDescription: "Knox")
+        let image = NSImage(systemSymbolName: sfSymbol, accessibilityDescription: "Flapsy")
         button.image = image?.withSymbolConfiguration(config)
         button.image?.isTemplate = true
 

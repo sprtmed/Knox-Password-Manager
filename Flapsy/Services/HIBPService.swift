@@ -40,7 +40,7 @@ enum HIBPService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Knox-Password-Manager", forHTTPHeaderField: "User-Agent")
+        request.setValue("Flapsy-Password-Manager", forHTTPHeaderField: "User-Agent")
         // Add padding to prevent response length analysis
         request.setValue("true", forHTTPHeaderField: "Add-Padding")
         request.timeoutInterval = 10

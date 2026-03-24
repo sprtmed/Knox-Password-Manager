@@ -17,7 +17,7 @@ final class ImportService {
         case bitwardenCSV   = "Bitwarden CSV"
         case chromeCSV      = "Chrome CSV"
         case genericCSV     = "Generic CSV"
-        case knoxBackup     = "Knox Backup"
+        case knoxBackup     = "Flapsy Backup"
     }
 
     enum ImportError: Error, LocalizedError {
@@ -436,7 +436,7 @@ final class ImportService {
 
         // Verify magic
         let magic = String(data: data[0..<4], encoding: .ascii)
-        guard magic == "FLPY" else { throw ImportError.parseError("Not a valid Knox backup") }
+        guard magic == "FLPY" else { throw ImportError.parseError("Not a valid Flapsy backup") }
 
         // Read version
         let version = data[4..<8].withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }

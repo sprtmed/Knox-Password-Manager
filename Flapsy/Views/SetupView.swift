@@ -37,7 +37,7 @@ struct SetupView: View {
 
                     // Title
                     VStack(spacing: 6) {
-                        Text("Welcome to Knox")
+                        Text("Welcome to Flapsy")
                             .font(.system(size: 18, weight: .bold, design: .monospaced))
                             .foregroundColor(theme.text)
                         Text("Create a master password to protect your vault")

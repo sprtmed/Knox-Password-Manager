@@ -69,7 +69,7 @@ struct SettingsView: View {
                 ))
             }
             .padding(.vertical, 4)
-            Text("Automatically start Knox when you log in to your Mac.")
+            Text("Automatically start Flapsy when you log in to your Mac.")
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundColor(theme.textFaint)
                 .frame(maxWidth: .infinity, alignment: .leading)

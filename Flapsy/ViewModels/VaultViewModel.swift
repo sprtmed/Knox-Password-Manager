@@ -211,6 +211,7 @@ final class VaultViewModel: ObservableObject {
     private let encryption = EncryptionService.shared
     private var cancellables = Set<AnyCancellable>()
     private var autoSaveDebounce: AnyCancellable?
+    private var settingsAutoSave: AnyCancellable?
 
     /// Reference to settings VM so we can persist settings with vault
     weak var settingsViewModel: SettingsViewModel?
@@ -860,6 +861,13 @@ final class VaultViewModel: ObservableObject {
         .sink { [weak self] _ in
             self?.persistVault()
         }
+
+        settingsAutoSave?.cancel()
+        settingsAutoSave = settingsViewModel?.objectWillChange
+            .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.persistVault()
+            }
 
         setupHealthMonitor()
         purgeExpiredTrash()
@@ -1514,7 +1522,7 @@ final class VaultViewModel: ObservableObject {
         biometricFailed = false
 
         // Touch ID prompt via BiometricService, then read key from Keychain
-        BiometricService.shared.authenticate(reason: "Unlock your Knox vault") { [weak self] success, error in
+        BiometricService.shared.authenticate(reason: "Unlock your Flapsy vault") { [weak self] success, error in
             guard let self = self else { return }
 
             guard success else {
