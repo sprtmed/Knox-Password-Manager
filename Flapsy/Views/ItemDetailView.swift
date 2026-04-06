@@ -438,10 +438,7 @@ struct ItemDetailView: View {
                     }
                 }
             }
-            TextEditor(text: $vault.editLoginNotes)
-                .font(.system(size: 13, design: .monospaced))
-                .foregroundColor(theme.text)
-                .scrollContentBackground(.hidden)
+            PlainTextEditor(text: $vault.editLoginNotes, textColor: NSColor(theme.text), insertionPointColor: NSColor(theme.text))
                 .padding(6)
                 .frame(minHeight: 50)
                 .background(theme.inputBg)
@@ -513,10 +510,7 @@ struct ItemDetailView: View {
                     }
                 }
             }
-            TextEditor(text: $vault.editCardNotes)
-                .font(.system(size: 13, design: .monospaced))
-                .foregroundColor(theme.text)
-                .scrollContentBackground(.hidden)
+            PlainTextEditor(text: $vault.editCardNotes, textColor: NSColor(theme.text), insertionPointColor: NSColor(theme.text))
                 .padding(6)
                 .frame(minHeight: 50)
                 .background(theme.inputBg)
@@ -547,10 +541,7 @@ struct ItemDetailView: View {
                 }
             }
         }
-        TextEditor(text: $vault.editNoteText)
-            .font(.system(size: 13, design: .monospaced))
-            .foregroundColor(theme.text)
-            .scrollContentBackground(.hidden)
+        PlainTextEditor(text: $vault.editNoteText, textColor: NSColor(theme.text), insertionPointColor: NSColor(theme.text))
             .padding(6)
             .frame(minHeight: 80)
             .background(theme.inputBg)

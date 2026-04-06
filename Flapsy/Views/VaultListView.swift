@@ -61,6 +61,7 @@ struct VaultListView: View {
                 navigateList(direction: -1)
                 return nil
             case 36: // Return/Enter
+                if vault.isEditingItem { return event }
                 if vault.selectedItemID != nil {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         vault.selectedItemID = nil

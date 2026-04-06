@@ -77,10 +77,7 @@ struct ExpandedNoteView: View {
                 .padding(.bottom, 16)
             } else {
                 // Full-height editor
-                TextEditor(text: $text)
-                    .font(.system(size: 13, design: .monospaced))
-                    .foregroundColor(theme.text)
-                    .scrollContentBackground(.hidden)
+                PlainTextEditor(text: $text, textColor: NSColor(theme.text), insertionPointColor: NSColor(theme.text))
                     .padding(10)
                     .background(theme.inputBg)
                     .cornerRadius(8)

@@ -122,3 +122,74 @@ struct FlapsyDropdown: View {
         .frame(width: width)
     }
 }
+
+// MARK: - PlainTextEditor
+
+/// An NSTextView wrapper that forces plain-text-only editing.
+/// Pasted HTML / rich text is automatically stripped to plain text.
+struct PlainTextEditor: NSViewRepresentable {
+    @Binding var text: String
+    var font: NSFont = .monospacedSystemFont(ofSize: 13, weight: .regular)
+    var textColor: NSColor = .labelColor
+    var insertionPointColor: NSColor = .labelColor
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    func makeNSView(context: Context) -> NSScrollView {
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.drawsBackground = false
+        scrollView.borderType = .noBorder
+
+        let textView = PlainNSTextView()
+        textView.delegate = context.coordinator
+        textView.isEditable = true
+        textView.isSelectable = true
+        textView.isRichText = false
+        textView.importsGraphics = false
+        textView.allowsUndo = true
+        textView.drawsBackground = false
+        textView.font = font
+        textView.textColor = textColor
+        textView.insertionPointColor = insertionPointColor
+        textView.textContainerInset = NSSize(width: 0, height: 0)
+        textView.textContainer?.widthTracksTextView = true
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = false
+        textView.autoresizingMask = [.width]
+        textView.string = text
+
+        scrollView.documentView = textView
+        return scrollView
+    }
+
+    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+        guard let textView = scrollView.documentView as? NSTextView else { return }
+        if textView.string != text {
+            textView.string = text
+            textView.font = font
+            textView.textColor = textColor
+        }
+        textView.font = font
+        textView.textColor = textColor
+        textView.insertionPointColor = insertionPointColor
+    }
+
+    final class Coordinator: NSObject, NSTextViewDelegate {
+        var parent: PlainTextEditor
+        init(_ parent: PlainTextEditor) { self.parent = parent }
+
+        func textDidChange(_ notification: Notification) {
+            guard let textView = notification.object as? NSTextView else { return }
+            parent.text = textView.string
+        }
+    }
+}
+
+/// NSTextView subclass that strips rich text on paste.
+final class PlainNSTextView: NSTextView {
+    override func paste(_ sender: Any?) {
+        pasteAsPlainText(sender)
+    }
+}
