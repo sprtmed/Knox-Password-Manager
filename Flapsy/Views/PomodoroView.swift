@@ -648,44 +648,132 @@ private struct BlockTimerView: View {
     // MARK: Celebration
 
     private var celebrationOverlay: some View {
+        CelebrationScreen(timer: timer)
+    }
+
+    private var footerText: String {
+        if timer.completedBlocks >= timer.blockGoal && timer.blockGoal > 0 {
+            return "Goal reached! Amazing work today."
+        }
+        return "Keep going. Keep the momentum going."
+    }
+}
+
+// MARK: - Celebration Screen
+
+private struct ConfettiPiece: Identifiable {
+    let id = UUID()
+    var x: CGFloat
+    var y: CGFloat
+    let size: CGFloat
+    let color: Color
+    var rotation: Double
+    let rotationSpeed: Double
+    var xSpeed: CGFloat
+    let ySpeed: CGFloat
+    let shape: Int
+}
+
+private struct CelebrationScreen: View {
+    @Environment(\.theme) var theme
+    @ObservedObject var timer: PomodoroTimer
+    @State private var confetti: [ConfettiPiece] = []
+    @State private var animationPhase: Int = 0
+    @State private var checkScale: CGFloat = 0.0
+    @State private var textOpacity: Double = 0.0
+    @State private var glowRadius: CGFloat = 0
+    @State private var timerRef: Timer?
+
+    var body: some View {
         ZStack {
-            // Full-screen background
-            theme.dropBg
-                .ignoresSafeArea()
+            theme.dropBg.ignoresSafeArea()
 
-            // Animated color rings
-            ForEach(0..<3, id: \.self) { i in
-                Circle()
-                    .stroke(
-                        [theme.accentGreen, theme.accentBlue, theme.accentPurple][i].opacity(0.15),
-                        lineWidth: 40
+            // Confetti layer
+            Canvas { context, size in
+                for piece in confetti {
+                    let rect = CGRect(
+                        x: piece.x - piece.size / 2,
+                        y: piece.y - piece.size / 2,
+                        width: piece.size,
+                        height: piece.shape == 1 ? piece.size : piece.size * 0.6
                     )
-                    .frame(width: CGFloat(120 + i * 100), height: CGFloat(120 + i * 100))
-                    .scaleEffect(timer.showCelebration ? 1.0 : 0.3)
-                    .opacity(timer.showCelebration ? 1.0 : 0)
-                    .animation(
-                        .spring(response: 0.6, dampingFraction: 0.6)
-                            .delay(Double(i) * 0.1),
-                        value: timer.showCelebration
-                    )
+                    context.opacity = piece.y < size.height + 20 ? 1.0 : 0.0
+
+                    var transform = CGAffineTransform.identity
+                    transform = transform.translatedBy(x: piece.x, y: piece.y)
+                    transform = transform.rotated(by: piece.rotation)
+                    transform = transform.translatedBy(x: -piece.x, y: -piece.y)
+
+                    context.transform = transform
+
+                    if piece.shape == 1 {
+                        let path = Path(ellipseIn: rect)
+                        context.fill(path, with: .color(piece.color))
+                    } else {
+                        let path = Path(roundedRect: rect, cornerRadius: 1)
+                        context.fill(path, with: .color(piece.color))
+                    }
+
+                    context.transform = .identity
+                }
             }
+            .allowsHitTesting(false)
 
+            // Glow burst behind checkmark
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [theme.accentGreen.opacity(0.3), .clear],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: glowRadius
+                    )
+                )
+                .frame(width: glowRadius * 2, height: glowRadius * 2)
+                .allowsHitTesting(false)
+
+            // Content
             VStack(spacing: 16) {
                 Spacer()
 
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 64))
-                    .foregroundColor(theme.accentGreen)
-                    .scaleEffect(timer.showCelebration ? 1.0 : 0.1)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.5), value: timer.showCelebration)
+                // Checkmark with bounce
+                ZStack {
+                    // Ripple rings
+                    ForEach(0..<3, id: \.self) { i in
+                        Circle()
+                            .stroke(theme.accentGreen.opacity(animationPhase >= 1 ? 0.0 : 0.4), lineWidth: 2)
+                            .frame(width: 80, height: 80)
+                            .scaleEffect(animationPhase >= 1 ? 3.0 : 1.0)
+                            .animation(
+                                .easeOut(duration: 1.2)
+                                    .delay(Double(i) * 0.2),
+                                value: animationPhase
+                            )
+                    }
+
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 72))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [theme.accentGreen, theme.accentBlue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .scaleEffect(checkScale)
+                        .shadow(color: theme.accentGreen.opacity(0.5), radius: 20)
+                }
 
                 Text(timer.celebrationText)
                     .font(.system(size: 28, weight: .bold, design: .monospaced))
                     .foregroundColor(theme.text)
+                    .opacity(textOpacity)
+                    .scaleEffect(textOpacity > 0 ? 1.0 : 0.8)
 
                 Text("Block \(timer.completedBlocks) of \(timer.blockGoal)")
                     .font(.system(size: 14, design: .monospaced))
                     .foregroundColor(theme.textSecondary)
+                    .opacity(textOpacity)
 
                 // Progress bar
                 GeometryReader { geo in
@@ -694,20 +782,27 @@ private struct BlockTimerView: View {
                             .fill(theme.fieldBg)
                             .frame(height: 8)
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(theme.accentGreen)
+                            .fill(
+                                LinearGradient(
+                                    colors: [theme.accentGreen, theme.accentBlue],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
                             .frame(
                                 width: geo.size.width * CGFloat(timer.completedBlocks) / CGFloat(max(timer.blockGoal, 1)),
                                 height: 8
                             )
-                            .animation(.spring(response: 0.5), value: timer.completedBlocks)
                     }
                 }
                 .frame(height: 8)
                 .padding(.horizontal, 40)
+                .opacity(textOpacity)
 
                 Text("\(timer.completedBlocks * timer.blockDuration) min done today")
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundColor(theme.textMuted)
+                    .opacity(textOpacity)
 
                 Spacer()
 
@@ -717,22 +812,87 @@ private struct BlockTimerView: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(theme.accentGreen)
+                        .background(
+                            LinearGradient(
+                                colors: [theme.accentGreen, theme.accentBlue],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                         .cornerRadius(12)
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 24)
+                .opacity(textOpacity)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear { startCelebration() }
+        .onDisappear { timerRef?.invalidate() }
     }
 
-    private var footerText: String {
-        if timer.completedBlocks >= timer.blockGoal && timer.blockGoal > 0 {
-            return "Goal reached! Amazing work today."
+    private func startCelebration() {
+        let colors: [Color] = [
+            theme.accentGreen, theme.accentBlue, theme.accentPurple,
+            theme.accentYellow, theme.accentRed, .white
+        ]
+
+        // Spawn confetti burst
+        for _ in 0..<60 {
+            confetti.append(ConfettiPiece(
+                x: CGFloat.random(in: 40...380),
+                y: CGFloat.random(in: -100 ... -20),
+                size: CGFloat.random(in: 4...10),
+                color: colors.randomElement()!.opacity(Double.random(in: 0.6...1.0)),
+                rotation: Double.random(in: 0...360),
+                rotationSpeed: Double.random(in: -4...4),
+                xSpeed: CGFloat.random(in: -1.5...1.5),
+                ySpeed: CGFloat.random(in: 1.5...4.0),
+                shape: Int.random(in: 0...1)
+            ))
         }
-        return "Keep going. Keep the momentum going."
+
+        // Animate confetti falling
+        timerRef = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { _ in
+            DispatchQueue.main.async {
+                for i in confetti.indices {
+                    confetti[i].y += confetti[i].ySpeed
+                    confetti[i].x += confetti[i].xSpeed
+                    confetti[i].rotation += confetti[i].rotationSpeed * 0.05
+                    // Add slight wobble
+                    confetti[i].xSpeed += CGFloat.random(in: -0.1...0.1)
+                }
+            }
+        }
+        RunLoop.main.add(timerRef!, forMode: .common)
+
+        // Checkmark bounce in
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.4, blendDuration: 0)) {
+            checkScale = 1.0
+        }
+
+        // Glow burst
+        withAnimation(.easeOut(duration: 0.8)) {
+            glowRadius = 150
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            withAnimation(.easeIn(duration: 0.5)) {
+                glowRadius = 80
+            }
+        }
+
+        // Ripple rings
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            animationPhase = 1
+        }
+
+        // Text fade in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.easeOut(duration: 0.4)) {
+                textOpacity = 1.0
+            }
+        }
     }
 }
 
