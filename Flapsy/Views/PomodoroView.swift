@@ -581,21 +581,46 @@ private struct BlockTimerView: View {
             switch timer.blockState {
             case .idle:
                 let allDone = timer.completedBlocks >= timer.blockGoal
-                Button(action: {
-                    guard !allDone else { return }
-                    timer.dismissCelebration()
-                    timer.startBlock()
-                }) {
-                    Text(allDone ? "Goal Complete!" : "Start \(timer.blockDuration) min")
-                        .font(.system(size: 15, weight: .semibold, design: .monospaced))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(allDone ? theme.accentGreen : Color(hex: "1e293b"))
-                        .cornerRadius(12)
+                if allDone {
+                    VStack(spacing: 8) {
+                        Text("Goal Complete!")
+                            .font(.system(size: 15, weight: .semibold, design: .monospaced))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(theme.accentGreen)
+                            .cornerRadius(12)
+
+                        Button(action: { timer.resetBlocks() }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "arrow.counterclockwise")
+                                    .font(.system(size: 11))
+                                Text("Start Over")
+                                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            }
+                            .foregroundColor(theme.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(theme.fieldBg)
+                            .cornerRadius(10)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                } else {
+                    Button(action: {
+                        timer.dismissCelebration()
+                        timer.startBlock()
+                    }) {
+                        Text("Start \(timer.blockDuration) min")
+                            .font(.system(size: 15, weight: .semibold, design: .monospaced))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color(hex: "1e293b"))
+                            .cornerRadius(12)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-                .disabled(allDone)
 
             case .running:
                 Button(action: { timer.pauseBlock() }) {
