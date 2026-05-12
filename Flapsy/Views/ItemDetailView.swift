@@ -941,7 +941,7 @@ struct ReauthOverlay: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.5)
+            Color.black.opacity(0.85)
                 .ignoresSafeArea()
 
             VStack(spacing: 12) {
@@ -970,7 +970,6 @@ struct ReauthOverlay: View {
                         .font(.system(size: 13, design: .monospaced))
                         .foregroundColor(theme.text)
                         .padding(10)
-                        .onSubmit { vault.confirmReauth() }
                 }
                 .background(theme.inputBg)
                 .cornerRadius(8)
@@ -1009,6 +1008,7 @@ struct ReauthOverlay: View {
                         .cornerRadius(8)
                     }
                     .buttonStyle(.plain)
+                    .keyboardShortcut(.defaultAction)
                     .disabled(vault.isReauthenticating)
 
                     Button(action: { vault.cancelReauth() }) {
@@ -1021,10 +1021,12 @@ struct ReauthOverlay: View {
                             .cornerRadius(8)
                     }
                     .buttonStyle(.plain)
+                    .keyboardShortcut(.cancelAction)
                 }
             }
             .padding(20)
             .frame(maxWidth: 300)
+            .background(theme.dropBg)
             .background(theme.cardBg)
             .cornerRadius(12)
             .overlay(

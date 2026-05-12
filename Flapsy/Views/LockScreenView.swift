@@ -63,7 +63,6 @@ struct LockScreenView: View {
                 )
                 .foregroundColor(theme.text)
                 .focused($isPasswordFocused)
-                .onSubmit { vault.unlock() }
                 .modifier(ShakeModifier(shakes: vault.shakeError ? 3 : 0))
                 .padding(.horizontal, 32)
 
@@ -153,6 +152,7 @@ struct LockScreenView: View {
                     .cornerRadius(10)
                 }
                 .buttonStyle(.plain)
+                .keyboardShortcut(.defaultAction)
                 .disabled(vault.isLoading || vault.isLockedOut)
                 .padding(.horizontal, 32)
             } else {
@@ -182,6 +182,7 @@ struct LockScreenView: View {
                     .cornerRadius(10)
                 }
                 .buttonStyle(.plain)
+                .keyboardShortcut(.defaultAction)
                 .disabled(vault.isLoading || vault.isLockedOut)
                 .padding(.horizontal, 32)
             }
